@@ -135,12 +135,34 @@ def out_member_from_club(club_telegram_id, member_telegram_id):
             cur.execute(sql, values)
 
 
-def get_clubs_of_client(client_telegram_id):
-    pass
+def get_id_clubs_of_client(client_telegram_id):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = "SELECT club_telegram_id FROM clubs_and_members WHERE member_telegram_id = ? AND condition = 1"
+        cur.execute(sql, (client_telegram_id, ))
+        set_clubs_telegram_id = cur.fetchall()
+        if not set_clubs_telegram_id:
+            return None
+        clubs_telegram_id = ""
+        for club in set_clubs_telegram_id:
+            clubs_telegram_id += str(club[0])+";"
+        clubs_telegram_id = clubs_telegram_id[:-1]
+        return clubs_telegram_id
 
 
-def get_members_of_club(club_telegram_id):
-    pass
+def get_id_members_of_club(club_telegram_id):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = "SELECT member_telegram_id FROM clubs_and_members WHERE club_telegram_id = ? AND condition = 1"
+        cur.execute(sql, (club_telegram_id,))
+        set_members_telegram_id = cur.fetchall()
+        if not set_members_telegram_id:
+            return None
+        members_telegram_id = ""
+        for member in set_members_telegram_id:
+            members_telegram_id += str(member[0]) + ";"
+        members_telegram_id = members_telegram_id[:-1]
+        return members_telegram_id
 
 
 # functions show to debug
