@@ -7,7 +7,7 @@ from database import add_new_club, add_new_client, add_member_to_club, update_us
     get_id_members_of_club, get_id_clubs_of_client, is_user_client_or_club, out_member_from_club
 
 # Telegram your token
-bot = telebot.TeleBot("")
+bot = telebot.TeleBot("1439682687:AAHlGwcG-CUXtZ4vimJ6-u8ynFe0humkuVc")
 
 
 @bot.message_handler(commands=['start'])
