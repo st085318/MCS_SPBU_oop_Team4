@@ -38,6 +38,24 @@ def create_db():
         """)
 
 
+def is_user_client_or_club(telegram_id):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = "SELECT * FROM clients WHERE telegram_id = (?)"
+        cur.execute(sql, (telegram_id,))
+        is_user_client = cur.fetchone()
+
+        sql = "SELECT * FROM clubs WHERE telegram_id = (?)"
+        cur.execute(sql, (telegram_id,))
+        is_user_club = cur.fetchone()
+        if is_user_club:
+            return 1
+        if is_user_client:
+            return 2
+        return None
+
+
+
 def add_new_client(telegram_id):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
@@ -204,3 +222,5 @@ def show_members():
         print("CLUBS and their MEMS:\n")
         for club in clubs:
             print(club)
+
+create_db()
