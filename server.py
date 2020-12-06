@@ -14,7 +14,7 @@ def process_request(conn, addr):
                 ans = 1
 
 
-if __name__== "__main__":
+if __name__ == "__main__":
     with socket.socket() as sock:
         sock.bind(("", 3085))
         sock.listen()

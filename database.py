@@ -15,7 +15,7 @@ def create_db():
         cur.execute("""CREATE TABLE IF NOT EXISTS clubs(
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             telegram_id INTEGER UNIQUE NOT NULL,
-            club_name TEXT,
+            club_name TEXT UNIQUE,
             description TEXT,
             tags TEXT);
         """)
@@ -55,39 +55,47 @@ def is_user_client_or_club(telegram_id):
         return None
 
 
-
-def add_new_client(telegram_id):
+def add_new_client(telegram_id, client_name):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
-        sql = "INSERT INTO requests (table_to_insert, client_telegram_id, action)\
-              VALUES (?, ?, ?)"
-        values = ("clients", telegram_id, "CREATE")
+        sql = "INSERT INTO requests (table_to_insert, client_telegram_id, new_value, action)\
+              VALUES (?, ?, ?, ?)"
+        values = ("clients", telegram_id, client_name, "CREATE")
         cur.execute(sql, values)
         sql = "SELECT * FROM clients WHERE telegram_id = (?)"
         cur.execute(sql, (telegram_id,))
         exists_user = cur.fetchone()
         if exists_user is None:
-            sql = "INSERT INTO clients (telegram_id)\
-                  VALUES (?)"
-            values = (telegram_id, )
+            sql = "INSERT INTO clients (telegram_id, first_name)\
+                  VALUES (?, ?)"
+            values = (telegram_id, client_name)
             cur.execute(sql, values)
 
 
-def add_new_club(telegram_id):
+def add_new_club(telegram_id, club_name):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
-        sql = "INSERT INTO requests (table_to_insert, club_telegram_id, action)\
-              VALUES (?, ?, ?)"
-        values = ("clubs", telegram_id, "CREATE")
+        sql = "INSERT INTO requests (table_to_insert, club_telegram_id, new_value, action)\
+              VALUES (?, ?, ?, ?)"
+        values = ("clubs", telegram_id, club_name, "CREATE")
         cur.execute(sql, values)
         sql = "SELECT * FROM clubs WHERE telegram_id = (?)"
         cur.execute(sql, (telegram_id,))
         exists_user = cur.fetchone()
-        if exists_user is None:
-            sql = "INSERT INTO clubs (telegram_id)\
-              VALUES (?)"
-            values = (telegram_id, )
+        sql = "SELECT * FROM clubs WHERE club_name = (?)"
+        cur.execute(sql, (club_name,))
+        clubs_with_same_name = cur.fetchone()
+
+        # Rewrite to make exception
+        if clubs_with_same_name is not None:
+            return 0
+
+        elif exists_user is None:
+            sql = "INSERT INTO clubs (telegram_id, club_name)\
+              VALUES (?, ?)"
+            values = (telegram_id, club_name)
             cur.execute(sql, values)
+            return 1
 
 
 def update_user_data(telegram_id, field_name, field_value, type_of_user):
@@ -131,6 +139,36 @@ def add_member_to_club(club_telegram_id, member_telegram_id):
             sql = "UPDATE clubs_and_members SET condition = 1 WHERE club_telegram_id = ? AND member_telegram_id = ?"
             values = (club_telegram_id, member_telegram_id)
             cur.execute(sql, values)
+
+
+def get_name_from_client_id(client_tg_id):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = "SELECT first_name FROM clients WHERE telegram_id = ?"
+        value = (client_tg_id, )
+        cur.execute(sql, value)
+        name = cur.fetchall()
+        return str(name[0][0])
+
+
+def get_name_from_club_id(club_tg_id):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = "SELECT club_name  FROM clubs WHERE telegram_id = ?"
+        value = (club_tg_id, )
+        cur.execute(sql, value)
+        name = cur.fetchall()
+        return name[0][0]
+
+
+def get_club_id_from_club_name(club_name):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = "SELECT telegram_id  FROM clubs WHERE club_name = ?"
+        value = (club_name, )
+        cur.execute(sql, value)
+        name = cur.fetchall()
+        return name[0][0]
 
 
 def out_member_from_club(club_telegram_id, member_telegram_id):
@@ -183,6 +221,22 @@ def get_id_members_of_club(club_telegram_id):
         return members_telegram_id
 
 
+def get_clubs_to_join():
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        show_clubs()
+        cur = conn.cursor()
+        sql = "SELECT club_name FROM clubs WHERE telegram_id > 0"
+        cur.execute(sql)
+        clubs_names = cur.fetchall()
+        sql = "SELECT description FROM clubs WHERE telegram_id > 0"
+        cur.execute(sql)
+        clubs_description = cur.fetchall()
+        clubs = {}
+        for i in range(0, len(clubs_names)):
+            clubs.update({clubs_names[i][0]: clubs_description[i][0]})
+        return clubs
+
+
 # functions show to debug
 def show_clients():
     with sqlite3.connect('club_to_everyone.db') as conn:
@@ -202,14 +256,9 @@ def show_clients():
 def show_clubs():
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
-        cur.execute("SELECT * FROM host_clubs")
+        cur.execute("SELECT * FROM clubs")
         clubs = cur.fetchall()
         print("CLUBS :\n")
-        for club in clubs:
-            print(club)
-        cur.execute("SELECT * FROM host_clubs_requests")
-        clubs = cur.fetchall()
-        print("REQS :\n")
         for club in clubs:
             print(club)
 
@@ -222,5 +271,3 @@ def show_members():
         print("CLUBS and their MEMS:\n")
         for club in clubs:
             print(club)
-
-create_db()
