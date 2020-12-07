@@ -147,8 +147,14 @@ def get_name_from_client_id(client_tg_id):
         sql = "SELECT first_name FROM clients WHERE telegram_id = ?"
         value = (client_tg_id, )
         cur.execute(sql, value)
-        name = cur.fetchall()
-        return str(name[0][0])
+        first_name = cur.fetchall()
+        sql = "SELECT second_name FROM clients WHERE telegram_id = ?"
+        value = (client_tg_id, )
+        cur.execute(sql, value)
+        second_name = cur.fetchall()
+        if second_name[0][0] is not None:
+            return str(first_name[0][0]) + " " + str(second_name[0][0])
+        return str(first_name[0][0])
 
 
 def get_name_from_club_id(club_tg_id):
@@ -168,6 +174,8 @@ def get_club_id_from_club_name(club_name):
         value = (club_name, )
         cur.execute(sql, value)
         name = cur.fetchall()
+        if name is None:
+            return name
         return name[0][0]
 
 

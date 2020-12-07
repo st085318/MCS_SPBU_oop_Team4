@@ -47,7 +47,14 @@ def read_messages(message):
         #    bot.register_next_step_handler(msg, add_club_name)
         elif message.text == "Участники":
             members = get_id_members_of_club(message.chat.id)
-            bot.send_message(message.chat.id, str(members))
+            if members is None:
+                bot.send_message(message.chat.id, "У вас нет членов")
+            else:
+                list_of_members = members.split(";")
+                members = ""
+                for member in list_of_members:
+                    members += get_name_from_client_id(int(member)) + "\n"
+                bot.send_message(message.chat.id, str(members))
         else:
             bot.send_message(message.chat.id, "WHAT?!?!?")
     elif is_user_client_or_club(message.chat.id) == 2:
@@ -58,13 +65,17 @@ def read_messages(message):
             clubs = get_clubs_to_join()
             ans = ""
             for key, value in clubs.items():
-                ans +=str(key)+":\n"+str(value)+"\n\n"
-            bot.send_message(message.chat.id, "Список клубов и их описание, введите название клуба, "
+                if value is None:
+                    value = "Описание не предоставлено"
+                ans = str(key)+":\n"+str(value)+"\n\n"
+
+            bot.send_message(message.chat.id, "Список клубов и их описание"
+                                              "введите название клуба, "
                                               "если хотетите записаться, или esc, чтобы выйти из режима записи")
             msg = bot.send_message(message.chat.id, ans)
+
             bot.register_next_step_handler(msg, join_to_club)
         elif message.text == "Уйти":
-            msg = bot.send_message(message.chat.id, "Введите id клуба")
             msg = bot.send_message(message.chat.id, "Введите название клуба, который вы хотите покинуть")
             bot.register_next_step_handler(msg, quit_from_club)
         else:
@@ -100,22 +111,31 @@ def add_client(message):
 
 
 def add_client_surname(message):
-    update_user_data(message.chat.id, "second_name", message, "client")
-    bot.send_message(message.chat.id, "Поздравляем - " + message)
+    update_user_data(message.chat.id, "second_name", message.text, "client")
+    bot.send_message(message.chat.id, "Поздравляем - " + message.text)
 
 
 def join_to_club(message):
-    club_id = get_club_id_from_club_name(message.text)
-    add_member_to_club(int(club_id), message.chat.id)
-    bot.send_message(int(club_id), "К вам записался " + str(get_name_from_client_id(int(message.chat.id))))
-    bot.send_message(message.chat.id, "Вы записаны!")
+    if message.text == "esc":
+        pass
+    else:
+        club_id = get_club_id_from_club_name(message.text)
+        if club_id is None:
+            bot.send_message(message.chat.id, "Такого клуба нет")
+        else:
+            add_member_to_club(int(club_id), message.chat.id)
+            bot.send_message(int(club_id), "К вам записался " + str(get_name_from_client_id(int(message.chat.id))))
+            bot.send_message(message.chat.id, "Вы записаны!")
 
 
 def quit_from_club(message):
     club_id = get_club_id_from_club_name(message.text)
-    out_member_from_club(int(club_id), message.chat.id)
-    bot.send_message(int(club_id), "От вас ушёл " + str(get_name_from_client_id(int(message.chat.id))))
-    bot.send_message(message.chat.id, "Вы ушли от " + message.text)
+    if club_id is None:
+        bot.send_message(message.chat.id, "Вы не ходили на такой клуб")
+    else:
+        out_member_from_club(int(club_id), message.chat.id)
+        bot.send_message(int(club_id), "От вас ушёл " + str(get_name_from_client_id(int(message.chat.id))))
+        bot.send_message(message.chat.id, "Вы ушли от " + message.text)
 
 
 def add_club_description(message):
