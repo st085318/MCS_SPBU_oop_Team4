@@ -1,5 +1,9 @@
 import sqlite3
 
+# user - пользователь вообще
+# client - тот, кто ищет кружок
+# club - сама секция
+
 
 def create_db():
     with sqlite3.connect('club_to_everyone.db') as conn:
@@ -33,12 +37,25 @@ def create_db():
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             club_telegram_id INTEGER NOT NULL,
             member_telegram_id INTEGER NOT NULL,
+            group_id INTEGER,
             condition INT NOT NULL
+        );
+        """)
+
+        cur.execute("""CREATE TABLE IF NOT EXISTS clubs_groups(
+            id INTEGER AUTO_INCREMENT PRIMARY KEY,
+            club_telegram_id INTEGER NOT NULL,
+            group_id INTEGER NOT NULL,
+            timetable TEXT NOT NULL,
+            description TEXT
         );
         """)
 
 
 def is_user_client_or_club(telegram_id):
+    # return None если пользователя нет
+    #        1 если пользователь зарегистрирован как клуб
+    #        2 если пользователь зарегистрирован как клиент
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT * FROM clients WHERE telegram_id = (?)"
@@ -56,6 +73,7 @@ def is_user_client_or_club(telegram_id):
 
 
 def add_new_client(telegram_id, client_name):
+    # добавляет клиента, если он еще не зарегистрирован
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "INSERT INTO requests (table_to_insert, client_telegram_id, new_value, action)\
@@ -73,6 +91,7 @@ def add_new_client(telegram_id, client_name):
 
 
 def add_new_club(telegram_id, club_name):
+    # добавляет кружок, если он еще не зарегистрирован
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "INSERT INTO requests (table_to_insert, club_telegram_id, new_value, action)\
@@ -100,6 +119,7 @@ def add_new_club(telegram_id, club_name):
 
 def update_user_data(telegram_id, field_name, field_value, type_of_user):
     # type_of_user could be one of two values : club or client
+    # может обновить любую ячейку в таблицах клиентов и клубов
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
 
@@ -117,6 +137,7 @@ def update_user_data(telegram_id, field_name, field_value, type_of_user):
 
 
 def add_member_to_club(club_telegram_id, member_telegram_id):
+    # дописать return, для проверки записался ли человек в клуб или уже состоит
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
 
@@ -174,8 +195,8 @@ def get_club_id_from_club_name(club_name):
         value = (club_name, )
         cur.execute(sql, value)
         name = cur.fetchall()
-        if name is None:
-            return name
+        if not name:
+            return None
         return name[0][0]
 
 
@@ -200,6 +221,7 @@ def out_member_from_club(club_telegram_id, member_telegram_id):
 
 
 def get_id_clubs_of_client(client_telegram_id):
+    # получение telegram id клубов, в которые записан клиент
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT club_telegram_id FROM clubs_and_members WHERE member_telegram_id = ? AND condition = 1"
@@ -215,6 +237,7 @@ def get_id_clubs_of_client(client_telegram_id):
 
 
 def get_id_members_of_club(club_telegram_id):
+    # перепесать, чтоб возвращал кортеж или тип того
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT member_telegram_id FROM clubs_and_members WHERE club_telegram_id = ? AND condition = 1"
