@@ -16,7 +16,7 @@ bot = telebot.TeleBot("")
 def start_handler(message):
 
     #msg = bot.send_message(message.chat.id, "Hello everyone. Please, stay home!")
-    msg = bot.send_message(message.chat.id, "Что по Нраву - первая талант-ориентация в России! Мы предлагаем пройти тест, направленный на выявление твоих талантов и способностей. После прохождения ты узнаешь, в чём ты силен и какую спортивную секцию или творческий кружок тебе стоит посетить!")
+    msg = bot.send_message(message.chat.id, "Привет, не болей!")
     if is_user_client_or_club(message.chat.id) is None:
         markup = types.ReplyKeyboardMarkup()
         markup.row('Я ищу кружок')
