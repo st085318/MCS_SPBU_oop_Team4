@@ -4,7 +4,7 @@ import telebot
 import ast
 from telebot import types
 from string import Template
-from database import add_new_club, add_new_client, add_member_to_club, update_user_data, \
+from src.database import add_new_club, add_new_client, add_member_to_club, update_user_data, \
     get_id_members_of_club, get_id_clubs_of_client, is_user_client_or_club, out_member_from_club, create_db, \
     get_clubs_to_join, get_club_id_from_club_name, get_name_from_client_id, get_name_from_club_id
 
@@ -222,8 +222,3 @@ def add_club(message):
     markup.row('Описание')
     bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
     bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
-
-
-if __name__ == '__main__':
-    create_db()
-    bot.polling(none_stop=True)
