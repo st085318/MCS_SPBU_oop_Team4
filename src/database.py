@@ -1,5 +1,6 @@
 import sqlite3
 
+
 # user - пользователь вообще
 # client - тот, кто ищет кружок
 # club - сама секция
@@ -127,12 +128,12 @@ def update_user_data(telegram_id, field_name, field_value, type_of_user):
 
         sql = "INSERT INTO requests (table_to_insert, telegram_id, new_value, action)\
               VALUES (?, ?, ?, ?)"
-        sql = sql.replace("telegram_id", type_of_user+"_telegram_id")
-        values = (type_of_user+"s", telegram_id, field_value, "UPDATE " + field_name)
+        sql = sql.replace("telegram_id", type_of_user + "_telegram_id")
+        values = (type_of_user + "s", telegram_id, field_value, "UPDATE " + field_name)
         cur.execute(sql, values)
 
         sql = "UPDATE type_of_user SET field_name = ? WHERE telegram_id = ?"
-        sql = sql.replace("type_of_user", type_of_user+"s")
+        sql = sql.replace("type_of_user", type_of_user + "s")
         sql = sql.replace("field_name", field_name)
         values = (field_value, telegram_id)
         cur.execute(sql, values)
@@ -168,11 +169,11 @@ def get_name_from_client_id(client_tg_id):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT first_name FROM clients WHERE telegram_id = ?"
-        value = (client_tg_id, )
+        value = (client_tg_id,)
         cur.execute(sql, value)
         first_name = cur.fetchall()
         sql = "SELECT second_name FROM clients WHERE telegram_id = ?"
-        value = (client_tg_id, )
+        value = (client_tg_id,)
         cur.execute(sql, value)
         second_name = cur.fetchall()
         if second_name[0][0] is not None:
@@ -184,7 +185,7 @@ def get_name_from_club_id(club_tg_id):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT club_name  FROM clubs WHERE telegram_id = ?"
-        value = (club_tg_id, )
+        value = (club_tg_id,)
         cur.execute(sql, value)
         name = cur.fetchall()
         return name[0][0]
@@ -194,7 +195,7 @@ def get_club_id_from_club_name(club_name):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT telegram_id  FROM clubs WHERE club_name = ?"
-        value = (club_name, )
+        value = (club_name,)
         cur.execute(sql, value)
         name = cur.fetchall()
         if not name:
@@ -227,13 +228,13 @@ def get_id_clubs_of_client(client_telegram_id):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT club_telegram_id FROM clubs_and_members WHERE member_telegram_id = ? AND condition = 1"
-        cur.execute(sql, (client_telegram_id, ))
+        cur.execute(sql, (client_telegram_id,))
         set_clubs_telegram_id = cur.fetchall()
         if not set_clubs_telegram_id:
             return None
         clubs_telegram_id = ""
         for club in set_clubs_telegram_id:
-            clubs_telegram_id += str(club[0])+";"
+            clubs_telegram_id += str(club[0]) + ";"
         clubs_telegram_id = clubs_telegram_id[:-1]
         return clubs_telegram_id
 

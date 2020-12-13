@@ -4,17 +4,16 @@ import telebot
 import ast
 from telebot import types
 from string import Template
-from database import add_new_club, add_new_client, add_member_to_club, update_user_data, \
+from src.database import add_new_club, add_new_client, add_member_to_club, update_user_data, \
     get_id_members_of_club, get_id_clubs_of_client, is_user_client_or_club, out_member_from_club, create_db, \
     get_clubs_to_join, get_club_id_from_club_name, get_name_from_client_id, get_name_from_club_id
 
 # Telegram your token
-bot = telebot.TeleBot("1439682687:AAHlGwcG-CUXtZ4vimJ6-u8ynFe0humkuVc")
+bot = telebot.TeleBot("")
 
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
-    #msg = bot.send_message(message.chat.id, "Hello everyone. Please, stay home!")
     msg = bot.send_message(message.chat.id, "Привет, не болей!")
     if is_user_client_or_club(message.chat.id) is None:
         markup = types.ReplyKeyboardMarkup()
@@ -84,13 +83,51 @@ def read_messages(message):
             msg = bot.send_message(message.chat.id, "Введите название клуба, который вы хотите покинуть",
                                    reply_markup=del_markup)
             bot.register_next_step_handler(msg, quit_from_club)
+        elif message.text == "Тест":
+            markup = types.ReplyKeyboardMarkup()
+            markup.row('Да', 'Нет')
+            msg = bot.send_message(message.chat.id, "Вы собираетесь пройти тестирование для определения кружка.\n"
+                                                    "Тест не очень длинный, но может занять некоторое время.\n"
+                                                    "Приступить?", reply_markup=markup)
+            bot.register_next_step_handler(msg, member_test)
         else:
             bot.send_message(message.chat.id, "Простите, я не знаю такой команды...")
 
 
+def member_test(message, test_step=0):
+    try:
+        if message.text == 'Да':
+            # bot.register_next_step_handler(client_name, add_client)
+            pass
+        elif message.text == 'Нет':
+            # bot.register_next_step_handler(club_name, add_club)
+            print(message.chat.id)
+        else:
+            msg = bot.send_message(message.chat.id, "Пожалуйста, введите один из предложенных вариантов.")
+            bot.register_next_step_handler(msg, get_name_to_register)
+            return
+        if test_step == 0:
+            pass
+        elif test_step == 1:
+            pass
+        elif test_step == 2:
+            pass
+        elif test_step == 3:
+            pass
+        elif test_step == 4:
+            pass
+        elif test_step == 5:
+            pass
+        elif test_step == 6:
+            pass
+        # club_name = bot.send_message(message.chat.id, "Как называется ваш кружок?")
+    except Exception as e:
+        bot.reply_to(message, e)
+
+
 @bot.message_handler(content_types=['photo'])
 def react_photo(message):
-    bot.send_message(message.chat.id, "So beautifully!")
+    bot.send_message(message.chat.id, "So beautiful!")
 
 
 def get_name_to_register(message):
@@ -99,10 +136,14 @@ def get_name_to_register(message):
         if message.text == 'Я ищу кружок':
             client_name = bot.send_message(message.chat.id, "Как к Вам обращаться?")
             bot.register_next_step_handler(client_name, add_client)
-        else:
-            msg = bot.send_message(message.chat.id, "Как называется Ваш кружок?")
-            bot.register_next_step_handler(msg, add_club)
+        elif message.text == 'Я есть кружок':
+            club_name = bot.send_message(message.chat.id, "Как называется Ваш кружок?")
+            bot.register_next_step_handler(club_name, add_club)
             print(message.chat.id)
+        else:
+            msg = bot.send_message(message.chat.id, "Пожалуйста, введите один из предложенных вариантов.")
+            bot.register_next_step_handler(msg, get_name_to_register)
+            return
         del_markup = types.ReplyKeyboardRemove()
         # only on Saturday
         bot.send_message(message.chat.id, "Мы рады, быть полезными вам!", reply_markup=del_markup)
@@ -181,8 +222,3 @@ def add_club(message):
     markup.row('Описание')
     bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
     bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
-
-
-if __name__ == '__main__':
-    create_db()
-    bot.polling(none_stop=True)
