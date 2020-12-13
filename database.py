@@ -13,6 +13,7 @@ def create_db():
             telegram_id INTEGER UNIQUE NOT NULL,
             first_name TEXT,
             second_name TEXT,
+            city TEXT,
             tags TEXT);
         """)
 
@@ -20,6 +21,7 @@ def create_db():
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             telegram_id INTEGER UNIQUE NOT NULL,
             club_name TEXT UNIQUE,
+            city TEXT,
             description TEXT,
             tags TEXT);
         """)

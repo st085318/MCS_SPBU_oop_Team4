@@ -9,12 +9,11 @@ from database import add_new_club, add_new_client, add_member_to_club, update_us
     get_clubs_to_join, get_club_id_from_club_name, get_name_from_client_id, get_name_from_club_id
 
 # Telegram your token
-bot = telebot.TeleBot("")
+bot = telebot.TeleBot("1439682687:AAHlGwcG-CUXtZ4vimJ6-u8ynFe0humkuVc")
 
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
-
     #msg = bot.send_message(message.chat.id, "Hello everyone. Please, stay home!")
     msg = bot.send_message(message.chat.id, "Привет, не болей!")
     if is_user_client_or_club(message.chat.id) is None:
