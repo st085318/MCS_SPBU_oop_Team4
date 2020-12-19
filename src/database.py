@@ -1,6 +1,5 @@
 import sqlite3
 
-
 # user - пользователь вообще
 # client - тот, кто ищет кружок
 # club - сама секция
@@ -14,7 +13,9 @@ def create_db():
             telegram_id INTEGER UNIQUE NOT NULL,
             first_name TEXT,
             second_name TEXT,
-            tags TEXT);
+            tag_sport INTEGER,
+            tag_science INTEGER,
+            tag_art INTEGER);
         """)
 
         cur.execute("""CREATE TABLE IF NOT EXISTS clubs(
@@ -22,7 +23,9 @@ def create_db():
             telegram_id INTEGER UNIQUE NOT NULL,
             club_name TEXT UNIQUE,
             description TEXT,
-            tags TEXT);
+            tag_sport INTEGER,
+            tag_science INTEGER,
+            tag_art INTEGER);
         """)
 
         cur.execute("""CREATE TABLE IF NOT EXISTS requests(
@@ -51,6 +54,61 @@ def create_db():
             description TEXT
         );
         """)
+
+
+def set_tags(telegram_id, sport_value, science_value, art_value):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = ("""INSERT or REPLACE INTO clients(telegram_id, tag_sport, tag_science, tag_art)\
+        VALUES (?, ?, ?, ?)""")
+        values = (telegram_id, sport_value, science_value, art_value)
+        cur.execute(sql, values)
+
+
+def clear_tags(telegram_id):
+    set_tags(telegram_id, 0, 0, 0)
+
+
+def add_sport_tag(telegram_id, sport_value):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        tid = (telegram_id, )
+        cur.execute('SELECT tag_sport FROM clients WHERE telegram_id = ?', tid)
+        current_sport = cur.fetchone()[0]
+        cur.execute('SELECT tag_science FROM clients WHERE telegram_id = ?', tid)
+        current_science = cur.fetchone()[0]
+        cur.execute('SELECT tag_art FROM clients WHERE telegram_id = ?', tid)
+        current_art = cur.fetchone()[0]
+
+        set_tags(telegram_id, sport_value+current_sport, current_science, current_art)
+
+
+def add_science_tag(telegram_id, scince_value):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        tid = (telegram_id, )
+        cur.execute('SELECT tag_sport FROM clients WHERE telegram_id = ?', tid)
+        current_sport = cur.fetchone()[0]
+        cur.execute('SELECT tag_science FROM clients WHERE telegram_id = ?', tid)
+        current_science = cur.fetchone()[0]
+        cur.execute('SELECT tag_art FROM clients WHERE telegram_id = ?', tid)
+        current_art = cur.fetchone()[0]
+
+        set_tags(telegram_id, current_sport, scince_value + current_science, current_art)
+
+
+def add_art_tag(telegram_id, art_value):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        tid = (telegram_id, )
+        cur.execute('SELECT tag_sport FROM clients WHERE telegram_id = ?', tid)
+        current_sport = cur.fetchone()[0]
+        cur.execute('SELECT tag_science FROM clients WHERE telegram_id = ?', tid)
+        current_science = cur.fetchone()[0]
+        cur.execute('SELECT tag_art FROM clients WHERE telegram_id = ?', tid)
+        current_art = cur.fetchone()[0]
+
+        set_tags(telegram_id, current_sport, current_science, art_value + current_art)
 
 
 def is_user_client_or_club(telegram_id):
@@ -280,9 +338,9 @@ def show_clients():
             print(client)
         cur.execute('SELECT * FROM requests WHERE table_to_insert LIKE ("clients")')
         clients = cur.fetchall()
-        print("REQS :\n")
-        for client in clients:
-            print(client)
+        # print("REQS :\n")
+        # for client in clients:
+        #     print(client)
 
 
 def show_clubs():
