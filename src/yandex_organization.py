@@ -2,8 +2,7 @@ import requests
 import json
 
 
-def find_clubs_in_yandex(city="Москва", search_query="секции"):
-    apikey = "09ec3bea-ac24-482d-9670-7e57a2fcf222"
+def find_clubs_in_yandex(apikey, city="Москва", search_query="секции"):
     url = f"https://search-maps.yandex.ru/v1/?text={search_query},{city}&type=biz&lang=ru_RU&results=50&apikey={apikey}"
     yandex_ans = requests.get(url)
     companies_with_info = []

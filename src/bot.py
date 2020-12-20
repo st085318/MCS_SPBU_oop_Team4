@@ -7,9 +7,13 @@ from string import Template
 from src.database import add_new_club, add_new_client, add_member_to_club, update_user_data, \
     get_id_members_of_club, get_id_clubs_of_client, is_user_client_or_club, out_member_from_club, create_db, \
     get_clubs_to_join, get_club_id_from_club_name, get_name_from_client_id, get_name_from_club_id
+from src.yandex_organization import find_clubs_in_yandex
 
 # Telegram your token
-bot = telebot.TeleBot("")
+bot = telebot.TeleBot("1439682687:AAHlGwcG-CUXtZ4vimJ6-u8ynFe0humkuVc")
+apikey = "09ec3bea-ac24-482d-9670-7e57a2fcf222"
+clubss = []
+number_of_club = 0
 
 
 @bot.message_handler(commands=['start'])
@@ -90,8 +94,28 @@ def read_messages(message):
                                                     "Тест не очень длинный, но может занять некоторое время.\n"
                                                     "Приступить?", reply_markup=markup)
             bot.register_next_step_handler(msg, member_test)
+        elif message.text == "Другие кружки":
+            global clubss
+            global number_of_club
+            clubss = find_clubs_in_yandex(apikey)
+            del_markup = types.ReplyKeyboardRemove()
+            bot.send_message(message.chat.id, "А вот и Они", reply_markup=del_markup)
+            number_of_club = 0
+            club_to_show_in_message = ""
+            for club in clubss:
+                number_of_club += 1
+                club_to_show_in_message += club
+                if number_of_club == 5:
+                    break
+            markup = types.ReplyKeyboardMarkup()
+            markup.add('Выйти в меню', "Далее >")
+            msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
+            bot.register_next_step_handler(msg, show_clubs_from_yandex)
         else:
-            bot.send_message(message.chat.id, "Простите, я не знаю такой команды...")
+            markup = types.ReplyKeyboardMarkup()
+            markup.add('Записаться', "Уйти")
+            markup.row('Фамилия', "Другие кружки")
+            bot.send_message(message.chat.id, "Простите, я не знаю такой команды...", reply_markup= markup)
 
 
 def member_test(message, test_step=0):
@@ -159,7 +183,7 @@ def add_client(message):
     bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
     markup = types.ReplyKeyboardMarkup()
     markup.add('Записаться', "Уйти")
-    markup.row('Фамилия')
+    markup.row('Фамилия', "Другие кружки")
     bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
 
 
@@ -167,14 +191,14 @@ def add_client_surname(message):
     update_user_data(message.chat.id, "second_name", message.text, "client")
     markup = types.ReplyKeyboardMarkup()
     markup.add('Записаться', "Уйти")
-    markup.row('Фамилия')
+    markup.row('Фамилия', "Другие кружки")
     bot.send_message(message.chat.id, "Поздравляем - " + message.text, reply_markup=markup)
 
 
 def join_to_club(message):
     markup = types.ReplyKeyboardMarkup()
     markup.add('Записаться', "Уйти")
-    markup.row('Фамилия')
+    markup.row('Фамилия', "Другие кружки")
     if message.text == "esc":
         pass
     else:
@@ -190,7 +214,7 @@ def join_to_club(message):
 def quit_from_club(message):
     markup = types.ReplyKeyboardMarkup()
     markup.add('Записаться', "Уйти")
-    markup.row('Фамилия')
+    markup.row('Фамилия', "Другие кружки")
     club_id = get_club_id_from_club_name(message.text)
     if club_id is None:
         bot.send_message(message.chat.id, "Вы не ходили на такой клуб", reply_markup=markup)
@@ -222,3 +246,40 @@ def add_club(message):
     markup.row('Описание')
     bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
     bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
+
+
+def show_clubs_from_yandex(message):
+    markup = types.ReplyKeyboardMarkup()
+    markup.add('Записаться', "Уйти")
+    markup.row('Фамилия', "Другие кружки")
+    global number_of_club
+    global clubss
+    print(clubss)
+    print("\n")
+    print(number_of_club)
+    if number_of_club >= len(clubss):
+        bot.send_message(message.chat.id, "Больше кружков не найдено", reply_markup=markup)
+    else:
+        if message.text == 'Выйти в меню':
+            bot.send_message(message.chat.id, "Вы перешли в меню", reply_markup=markup)
+        elif message.text == "Далее >":
+            club_to_show_in_message = ""
+            prev_num = number_of_club
+            number_of_club = 0
+            for club in clubss:
+                number_of_club += 1
+                if number_of_club > prev_num:
+                    club_to_show_in_message += club
+                if number_of_club - prev_num == 5:
+                    break
+            markup = types.ReplyKeyboardMarkup()
+            markup.add('Выйти в меню', "Далее >")
+            msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
+            bot.register_next_step_handler(msg, show_clubs_from_yandex)
+        else:
+            bot.send_message(message.chat.id, "Я вас не понимаю", reply_markup=markup)
+
+
+if __name__ == '__main__':
+    create_db()
+    bot.polling(none_stop=True)
