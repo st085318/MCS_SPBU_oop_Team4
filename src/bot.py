@@ -8,8 +8,8 @@ import src.database as db
 from src.yandex_organization import find_clubs_in_yandex
 
 # Telegram your token
-bot = telebot.TeleBot("")
-apikey = ""
+bot = telebot.TeleBot("1439682687:AAHlGwcG-CUXtZ4vimJ6-u8ynFe0humkuVc")
+apikey = "09ec3bea-ac24-482d-9670-7e57a2fcf222"
 clubss = []
 number_of_club = 0
 
@@ -251,7 +251,9 @@ def get_name_to_register(message):
             msg = bot.send_message(message.chat.id, "Пожалуйста, введите один из предложенных вариантов.")
             bot.register_next_step_handler(msg, get_name_to_register)
             return
+        del_markup = types.ReplyKeyboardRemove()
         # only on Saturday
+        bot.send_message(message.chat.id, "Мы рады, быть полезными вам!", reply_markup=del_markup)
     except Exception as e:
         bot.reply_to(message, e)
 
@@ -366,5 +368,5 @@ def show_clubs_from_yandex(message):
 
 
 if __name__ == '__main__':
-    create_db()
+    db.create_db()
     bot.polling(none_stop=True)
