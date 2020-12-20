@@ -239,23 +239,26 @@ def add_client(message):
     bot.send_message(message.chat.id, "Поздравляем, " + message.text + ".")
     bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
     markup = types.ReplyKeyboardMarkup()
-    markup.add('Записаться', "Уйти")
+    markup.add('Записаться', 'Уйти')
     markup.row('Фамилия')
+    markup.row('Тест')
     bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
 
 
 def add_client_surname(message):
     db.update_user_data(message.chat.id, "second_name", message.text, "client")
     markup = types.ReplyKeyboardMarkup()
-    markup.add('Записаться', "Уйти")
+    markup.add('Записаться', 'Уйти')
     markup.row('Фамилия')
+    markup.row('Тест')
     bot.send_message(message.chat.id, "Поздравляем - " + message.text, reply_markup=markup)
 
 
 def join_to_club(message):
     markup = types.ReplyKeyboardMarkup()
-    markup.add('Записаться', "Уйти")
+    markup.add('Записаться', 'Уйти')
     markup.row('Фамилия')
+    markup.row('Тест')
     if message.text == "esc":
         pass
     else:
@@ -270,8 +273,9 @@ def join_to_club(message):
 
 def quit_from_club(message):
     markup = types.ReplyKeyboardMarkup()
-    markup.add('Записаться', "Уйти")
+    markup.add('Записаться', 'Уйти')
     markup.row('Фамилия')
+    markup.row('Тест')
     club_id = db.get_club_id_from_club_name(message.text)
     if club_id is None:
         bot.send_message(message.chat.id, "Вы не ходили на такой клуб", reply_markup=markup)
@@ -283,7 +287,7 @@ def quit_from_club(message):
 
 def add_club_description(message):
     markup = types.ReplyKeyboardMarkup()
-    markup.row("Участники")
+    markup.row('Участники')
     markup.row('Описание')
     db.update_user_data(message.chat.id, "description", message.text, "club")
     bot.send_message(message.chat.id, "Описание клуба изменено", reply_markup=markup)
@@ -299,7 +303,7 @@ def add_club(message):
         if not is_register:
             add_club()
     markup = types.ReplyKeyboardMarkup()
-    markup.row("Участники")
+    markup.row('Участники')
     markup.row('Описание')
     bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
     bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
