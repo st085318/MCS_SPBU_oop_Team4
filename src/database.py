@@ -340,9 +340,9 @@ def show_clients():
             print(client)
         cur.execute('SELECT * FROM requests WHERE table_to_insert LIKE ("clients")')
         clients = cur.fetchall()
-        # print("REQS :\n")
-        # for client in clients:
-        #     print(client)
+        print("REQS :\n")
+        for client in clients:
+            print(client)
 
 
 def show_clubs():
