@@ -23,20 +23,11 @@ def create_db():
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             telegram_id INTEGER UNIQUE NOT NULL,
             club_name TEXT UNIQUE,
-            city TEXT,
+            city TEXT NOT NULL,
             description TEXT,
             tag_sport INTEGER,
             tag_science INTEGER,
             tag_art INTEGER);
-        """)
-
-        cur.execute("""CREATE TABLE IF NOT EXISTS requests(
-            id INTEGER AUTO_INCREMENT PRIMARY KEY,
-            table_to_insert TEXT NOT NULL,
-            club_telegram_id INTEGER,
-            client_telegram_id INTEGER,
-            new_value TEXT,
-            action TEXT NOT NULL); 
         """)
 
         cur.execute("""CREATE TABLE IF NOT EXISTS clubs_and_members(
@@ -58,7 +49,7 @@ def create_db():
         """)
 
 
-def set_tags(telegram_id, sport_value, science_value, art_value):
+def set_tags(telegram_id: int, sport_value, science_value, art_value):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = ("""INSERT or REPLACE INTO clients(telegram_id, tag_sport, tag_science, tag_art)\

@@ -5,6 +5,7 @@ import ast
 from telebot import types
 from string import Template
 import src.database as db
+import src.new_database as newdb
 from src.yandex_organization import find_clubs_in_yandex
 
 # Telegram your token
@@ -17,7 +18,7 @@ number_of_club = 0
 @bot.message_handler(commands=['start'])
 def start_handler(message):
     msg = bot.send_message(message.chat.id, "Привет, не болей!")
-    if db.is_user_client_or_club(message.chat.id) is None:
+    if newdb.is_user_client_or_club(message.chat.id).is_unknown:
         markup = types.ReplyKeyboardMarkup()
         markup.row('Я ищу кружок')
         markup.row('Я есть кружок')
@@ -28,7 +29,7 @@ def start_handler(message):
 @bot.message_handler(commands=['help'])
 def help_information(message):
     bot.send_message(message.chat.id, "It's help!")
-    if db.is_user_client_or_club(message.chat.id) == 1:
+    if newdb.is_user_client_or_club(message.chat.id).is_club:
         msg = bot.send_message(message.chat.id, 'Отправьте: \n"Описание", чтобы изменить описание своего клуба\n'
                                                 '"Участники", чтобы узнать список участников клуба')
     else:
@@ -40,7 +41,7 @@ def help_information(message):
 
 @bot.message_handler(content_types=['text'])
 def read_messages(message):
-    if db.is_user_client_or_club(message.chat.id) == 1:
+    if newdb.is_user_client_or_club(message.chat.id).is_club:
         if message.text == "Описание":
             del_markup = types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Введите новое описание", reply_markup=del_markup)
@@ -60,7 +61,7 @@ def read_messages(message):
                 bot.send_message(message.chat.id, str(members))
         else:
             bot.send_message(message.chat.id, "Простите, я не знаю такой команды...")
-    elif db.is_user_client_or_club(message.chat.id) == 2:
+    elif newdb.is_user_client_or_club(message.chat.id).is_client:
         if message.text == "Фамилия":
             del_markup = types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Введите новую фамилию", reply_markup=del_markup)
