@@ -136,29 +136,29 @@ def member_test(message, test_step=0):
             if test_step == 0:
                 db.clear_tags(message.from_user.id)
             elif test_step == 1:
-                db.add_science_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 2, 0)
             elif test_step == 2:
-                db.add_sport_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 2, 0, 0)
             elif test_step == 3:
-                db.add_science_tag(message.from_user.id, 1)
-                db.add_art_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 1, 0)
+                db.add_tags(message.from_user.id, 0, 0, 2)
             elif test_step == 4:
-                db.add_art_tag(message.from_user.id, 1)
-                db.add_sport_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 1)
+                db.add_tags(message.from_user.id, 2, 0, 0)
             elif test_step == 5:
-                db.add_art_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 2)
             elif test_step == 6:
-                db.add_art_tag(message.from_user.id, 1)
-                db.add_science_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 1)
+                db.add_tags(message.from_user.id, 0, 2, 0)
             elif test_step == 7:
-                db.add_art_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 2)
             elif test_step == 8:
-                db.add_sport_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 2, 0, 0)
             elif test_step == 9:
-                db.add_science_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 2, 0)
             elif test_step == 10:
-                db.add_art_tag(message.from_user.id, 2)
-                db.add_science_tag(message.from_user.id, 1)
+                db.add_tags(message.from_user.id, 0, 0, 2)
+                db.add_tags(message.from_user.id, 0, 1, 0)
             # bot.register_next_step_handler(client_name, add_client)
             pass
         elif message.text == 'Нет':
@@ -169,21 +169,21 @@ def member_test(message, test_step=0):
             elif test_step == 1:
                 pass
             elif test_step == 2:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 3:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 4:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 5:
                 pass
             elif test_step == 6:
-                db.add_science_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, 0, -1, 0)
             elif test_step == 7:
                 pass
             elif test_step == 8:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 9:
-                db.add_science_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, 0, -1, 0)
             elif test_step == 10:
                 pass
             # bot.register_next_step_handler(club_name, add_club)
