@@ -97,9 +97,10 @@ def read_messages(message):
         elif message.text == "Другие кружки":
             global clubss
             global number_of_club
+            tag_query = form_query_from_tags(message.from_user.id)
             clubss = find_clubs_in_yandex(apikey)
             del_markup = types.ReplyKeyboardRemove()
-            bot.send_message(message.chat.id, "А вот и Они", reply_markup=del_markup)
+            bot.send_message(message.chat.id, "А вот и они", reply_markup=del_markup)
             number_of_club = 0
             club_to_show_in_message = ""
             for club in clubss:
@@ -363,8 +364,9 @@ if __name__ == '__main__':
 
 def show_clubs_from_yandex(message):
     markup = types.ReplyKeyboardMarkup()
-    markup.add('Записаться', "Уйти")
-    markup.row('Фамилия', "Другие кружки")
+    markup.add('Записаться', 'Уйти')
+    markup.row('Фамилия', 'Другие кружки')
+    markup.row('Тест')
     global number_of_club
     global clubss
     print(clubss)
@@ -393,6 +395,18 @@ def show_clubs_from_yandex(message):
             bot.send_message(message.chat.id, "Я вас не понимаю", reply_markup=markup)
 
 
+def form_query_from_tags(user_id):
+    tags = db.get_client_tags(user_id)
+    best_tag = max(tags, key=tags.get)
+    print(best_tag)
+    if best_tag == "science":
+        return "Образовательный центр"
+    elif best_tag == "art":
+        return "Клуб творчества"
+    elif "sport":
+        return "Секция"
+
+
 if __name__ == '__main__':
-    create_db()
+    db.create_db()
     bot.polling(none_stop=True)
