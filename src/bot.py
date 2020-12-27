@@ -1,15 +1,12 @@
-import os
-import sys
-import telebot
-import ast
-from telebot import types
-from string import Template
-import src.database as db
 from src.yandex_organization import find_clubs_in_yandex
+import src.database as db
+import telebot
+import json
 
-# Telegram your token
-bot = telebot.TeleBot("")
-apikey = ""
+with open("credentials/credentials.json") as f:
+    credentials = json.load(f)[1]
+bot = telebot.TeleBot(credentials["telegram_bot_token"])
+apikey = credentials["yandex_key"]
 clubss = []
 number_of_club = 0
 
@@ -18,7 +15,7 @@ number_of_club = 0
 def start_handler(message):
     msg = bot.send_message(message.chat.id, "Привет, не болей!")
     if db.is_user_client_or_club(message.chat.id) is None:
-        markup = types.ReplyKeyboardMarkup()
+        markup = telebot.types.ReplyKeyboardMarkup()
         markup.row('Я ищу кружок')
         markup.row('Я есть кружок')
         bot.send_message(message.chat.id, "Кто вы?", reply_markup=markup)
@@ -42,7 +39,7 @@ def help_information(message):
 def read_messages(message):
     if db.is_user_client_or_club(message.chat.id) == 1:
         if message.text == "Описание":
-            del_markup = types.ReplyKeyboardRemove()
+            del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Введите новое описание", reply_markup=del_markup)
             bot.register_next_step_handler(msg, add_club_description)
         # elif message.text == "Название":
@@ -62,7 +59,7 @@ def read_messages(message):
             bot.send_message(message.chat.id, "Простите, я не знаю такой команды...")
     elif db.is_user_client_or_club(message.chat.id) == 2:
         if message.text == "Фамилия":
-            del_markup = types.ReplyKeyboardRemove()
+            del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Введите новую фамилию", reply_markup=del_markup)
             bot.register_next_step_handler(msg, add_client_surname)
         elif message.text == "Записаться":
@@ -72,21 +69,21 @@ def read_messages(message):
                 if value is None:
                     value = "Описание не предоставлено"
                 ans += str(key) + ":\n" + str(value) + "\n\n"
-            del_markup = types.ReplyKeyboardRemove()
+            del_markup = telebot.types.ReplyKeyboardRemove()
             bot.send_message(message.chat.id, "Список клубов и их описание. "
                                               "Введите название клуба, "
                                               "если хотетите записаться, или esc, чтобы выйти из режима записи",
                              reply_markup=del_markup)
             msg = bot.send_message(message.chat.id, ans)
 
-            bot.register_next_step_handler(msg, join_to_club)
+            bot.register_next_step_handler(msg, join_club)
         elif message.text == "Уйти":
-            del_markup = types.ReplyKeyboardRemove()
+            del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Введите название клуба, который вы хотите покинуть",
                                    reply_markup=del_markup)
             bot.register_next_step_handler(msg, quit_from_club)
         elif message.text == "Тест":
-            markup = types.ReplyKeyboardMarkup()
+            markup = telebot.types.ReplyKeyboardMarkup()
             markup.row('Да', 'Нет')
             msg = bot.send_message(message.chat.id, "Вы собираетесь пройти тестирование для определения рода Ваших "
                                                     "занятий.\n"
@@ -99,7 +96,7 @@ def read_messages(message):
             global number_of_club
             tag_query = form_query_from_tags(message.from_user.id)
             clubss = find_clubs_in_yandex(apikey)
-            del_markup = types.ReplyKeyboardRemove()
+            del_markup = telebot.types.ReplyKeyboardRemove()
             bot.send_message(message.chat.id, "А вот и они", reply_markup=del_markup)
             number_of_club = 0
             club_to_show_in_message = ""
@@ -108,14 +105,15 @@ def read_messages(message):
                 club_to_show_in_message += club
                 if number_of_club == 5:
                     break
-            markup = types.ReplyKeyboardMarkup()
+            markup = telebot.types.ReplyKeyboardMarkup()
             markup.add('Выйти в меню', "Далее >")
             msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
             bot.register_next_step_handler(msg, show_clubs_from_yandex)
         else:
-            markup = types.ReplyKeyboardMarkup()
-            markup.add('Записаться', "Уйти")
-            markup.row('Фамилия', "Другие кружки")
+            markup = telebot.types.ReplyKeyboardMarkup()
+            markup.add('Записаться', 'Уйти')
+            markup.row('Фамилия', 'Другие кружки')
+            markup.row('Тест')
             bot.send_message(message.chat.id, "Простите, я не знаю такой команды...", reply_markup= markup)
 
 
@@ -152,7 +150,7 @@ def member_test(message, test_step=0):
             pass
         elif message.text == 'Нет':
             if test_step == 0:
-                del_markup = types.ReplyKeyboardRemove()
+                del_markup = telebot.types.ReplyKeyboardRemove()
                 bot.send_message(message.chat.id, "Отмена теста.", reply_markup=del_markup)
                 return
             elif test_step == 1:
@@ -223,7 +221,7 @@ def member_test(message, test_step=0):
                                                     "Сочиняете рассказы или стихи?")
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 10:
-            del_markup = types.ReplyKeyboardRemove()
+            del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Тест пройден, информация сохранена!", reply_markup=del_markup)
             return
         # club_name = bot.send_message(message.chat.id, "Как называется ваш кружок?")
@@ -239,7 +237,7 @@ def react_photo(message):
 def get_name_to_register(message):
     # сначала получаем имя/название, а потом регистрируем
     try:
-        del_markup = types.ReplyKeyboardRemove()
+        del_markup = telebot.types.ReplyKeyboardRemove()
         bot.send_message(message.chat.id, "Мы рады быть полезными Вам!", reply_markup=del_markup)
         if message.text == 'Я ищу кружок':
             client_name = bot.send_message(message.chat.id, "Как к Вам обращаться?")
@@ -263,7 +261,7 @@ def add_client(message):
     db.add_new_client(user_id, message.text)
     bot.send_message(message.chat.id, "Поздравляем, " + message.text + ".")
     bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.add('Записаться', 'Уйти')
     markup.row('Фамилия', 'Другие кружки')
     markup.row('Тест')
@@ -272,15 +270,15 @@ def add_client(message):
 
 def add_client_surname(message):
     db.update_user_data(message.chat.id, "second_name", message.text, "client")
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.add('Записаться', 'Уйти')
     markup.row('Фамилия', 'Другие кружки')
     markup.row('Тест')
     bot.send_message(message.chat.id, "Поздравляем - " + message.text, reply_markup=markup)
 
 
-def join_to_club(message):
-    markup = types.ReplyKeyboardMarkup()
+def join_club(message):
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.add('Записаться', 'Уйти')
     markup.row('Фамилия', 'Другие кружки')
     markup.row('Тест')
@@ -297,7 +295,7 @@ def join_to_club(message):
 
 
 def quit_from_club(message):
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.add('Записаться', 'Уйти')
     markup.row('Фамилия', 'Другие кружки')
     markup.row('Тест')
@@ -311,7 +309,7 @@ def quit_from_club(message):
 
 
 def add_club_description(message):
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.row('Участники')
     markup.row('Описание')
     db.update_user_data(message.chat.id, "description", message.text, "club")
@@ -327,11 +325,11 @@ def add_club(message):
         is_register = db.add_new_club(user_id, message.text)
         if not is_register:
             add_club()
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.row('Спорт')
     markup.row('Наука')
     markup.row('Искусство')
-    msg = bot.send_message("К какому направлению относится Ваш клуб?", reply_markup=markup)
+    msg = bot.send_message(message.chat.id, "К какому направлению относится Ваш клуб?", reply_markup=markup)
     bot.register_next_step_handler(msg, add_club_tags)
 
 
@@ -348,7 +346,7 @@ def add_club_tags(message):
             bot.register_next_step_handler(msg, add_club_tags)
             return
         db.set_club_tags(message, art_value=tags["art"], sport_value=tags["sport"], science_value=tags["science"])
-        markup = types.ReplyKeyboardMarkup()
+        markup = telebot.types.ReplyKeyboardMarkup()
         markup.row('Участники')
         markup.row('Описание')
         bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
@@ -363,7 +361,7 @@ if __name__ == '__main__':
 
 
 def show_clubs_from_yandex(message):
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.add('Записаться', 'Уйти')
     markup.row('Фамилия', 'Другие кружки')
     markup.row('Тест')
@@ -387,7 +385,7 @@ def show_clubs_from_yandex(message):
                     club_to_show_in_message += club
                 if number_of_club - prev_num == 5:
                     break
-            markup = types.ReplyKeyboardMarkup()
+            markup = telebot.types.ReplyKeyboardMarkup()
             markup.add('Выйти в меню', "Далее >")
             msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
             bot.register_next_step_handler(msg, show_clubs_from_yandex)
