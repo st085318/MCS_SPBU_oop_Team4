@@ -325,10 +325,11 @@ def add_club(message):
     # сама регистрация клуба(добавление в бд)
     user_id = message.from_user.id
     is_register = 0
-    while not is_register:
-        is_register = db.add_new_club(user_id, message.text)
-        if not is_register:
-            add_club()
+    if not db.add_new_club(user_id, message.text):
+        msg = bot.send_message(message.chat.id, "Клуб с таким названием уже существует...\n"
+                                                "Введите другое название")
+        bot.register_next_step_handler(msg, add_club)
+        return
     markup = types.ReplyKeyboardMarkup()
     markup.row('Участники')
     markup.row('Описание')
