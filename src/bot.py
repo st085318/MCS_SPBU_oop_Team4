@@ -98,31 +98,31 @@ def member_test(message, test_step=0):
     try:
         if message.text == 'Да':
             if test_step == 0:
-                db.clear_tags(message.from_user.id)
+                db.clear_client_tags(message.from_user.id)
             elif test_step == 1:
-                db.add_science_tag(message.from_user.id, 2)
+                db.add_science_client_tag(message.from_user.id, 2)
             elif test_step == 2:
-                db.add_sport_tag(message.from_user.id, 2)
+                db.add_sport_client_tag(message.from_user.id, 2)
             elif test_step == 3:
-                db.add_science_tag(message.from_user.id, 1)
-                db.add_art_tag(message.from_user.id, 2)
+                db.add_science_client_tag(message.from_user.id, 1)
+                db.add_art_client_tag(message.from_user.id, 2)
             elif test_step == 4:
-                db.add_art_tag(message.from_user.id, 1)
-                db.add_sport_tag(message.from_user.id, 2)
+                db.add_art_client_tag(message.from_user.id, 1)
+                db.add_sport_client_tag(message.from_user.id, 2)
             elif test_step == 5:
-                db.add_art_tag(message.from_user.id, 2)
+                db.add_art_client_tag(message.from_user.id, 2)
             elif test_step == 6:
-                db.add_art_tag(message.from_user.id, 1)
-                db.add_science_tag(message.from_user.id, 2)
+                db.add_art_client_tag(message.from_user.id, 1)
+                db.add_science_client_tag(message.from_user.id, 2)
             elif test_step == 7:
-                db.add_art_tag(message.from_user.id, 2)
+                db.add_art_client_tag(message.from_user.id, 2)
             elif test_step == 8:
-                db.add_sport_tag(message.from_user.id, 2)
+                db.add_sport_client_tag(message.from_user.id, 2)
             elif test_step == 9:
-                db.add_science_tag(message.from_user.id, 2)
+                db.add_science_client_tag(message.from_user.id, 2)
             elif test_step == 10:
-                db.add_art_tag(message.from_user.id, 2)
-                db.add_science_tag(message.from_user.id, 1)
+                db.add_art_client_tag(message.from_user.id, 2)
+                db.add_science_client_tag(message.from_user.id, 1)
             # bot.register_next_step_handler(client_name, add_client)
             pass
         elif message.text == 'Нет':
@@ -133,21 +133,21 @@ def member_test(message, test_step=0):
             elif test_step == 1:
                 pass
             elif test_step == 2:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_sport_client_tag(message.from_user.id, -1)
             elif test_step == 3:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_sport_client_tag(message.from_user.id, -1)
             elif test_step == 4:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_sport_client_tag(message.from_user.id, -1)
             elif test_step == 5:
                 pass
             elif test_step == 6:
-                db.add_science_tag(message.from_user.id, -1)
+                db.add_science_client_tag(message.from_user.id, -1)
             elif test_step == 7:
                 pass
             elif test_step == 8:
-                db.add_sport_tag(message.from_user.id, -1)
+                db.add_sport_client_tag(message.from_user.id, -1)
             elif test_step == 9:
-                db.add_science_tag(message.from_user.id, -1)
+                db.add_science_client_tag(message.from_user.id, -1)
             elif test_step == 10:
                 pass
             # bot.register_next_step_handler(club_name, add_club)
@@ -303,7 +303,35 @@ def add_club(message):
         if not is_register:
             add_club()
     markup = types.ReplyKeyboardMarkup()
-    markup.row('Участники')
-    markup.row('Описание')
-    bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
-    bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
+    markup.row('Спорт')
+    markup.row('Наука')
+    markup.row('Искусство')
+    msg = bot.send_message("К какому направлению относится Ваш клуб?", reply_markup=markup)
+    bot.register_next_step_handler(msg, add_club_tags)
+
+
+def add_club_tags(message):
+    try:
+        if message.text == 'Спорт':
+            tags = {"art": 0, "sport": 3, "science": 0}
+        elif message.text == 'Наука':
+            tags = {"art": 0, "sport": 0, "science": 3}
+        elif message.text == 'Искусство':
+            tags = {"art": 3, "sport": 0, "science": 0}
+        else:
+            msg = bot.send_message(message.chat.id, "Пожалуйста, введите один из предложенных вариантов.")
+            bot.register_next_step_handler(msg, add_club_tags)
+            return
+        db.set_club_tags(message, art_value=tags["art"], sport_value=tags["sport"], science_value=tags["science"])
+        markup = types.ReplyKeyboardMarkup()
+        markup.row('Участники')
+        markup.row('Описание')
+        bot.send_message(message.chat.id, "Вы успешно зарегистрированны!")
+        bot.send_message(message.chat.id, "Если хотите узнать функционал, введите команду /help", reply_markup=markup)
+    except Exception as e:
+        bot.reply_to(message, e)
+
+
+if __name__ == '__main__':
+    db.create_db()
+    bot.polling(none_stop=True)
