@@ -1,7 +1,7 @@
 from src.yandex_organization import find_clubs_in_yandex
 import src.database as db
-import telebot
 import json
+import telebot
 
 with open("credentials/credentials.json") as f:
     credentials = json.load(f)[1]
