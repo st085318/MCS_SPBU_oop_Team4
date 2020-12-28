@@ -1,5 +1,5 @@
 import sqlite3
-
+from collections import namedtuple
 
 # user - пользователь вообще
 # client - тот, кто ищет кружок
@@ -24,7 +24,7 @@ def create_db():
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             telegram_id INTEGER UNIQUE NOT NULL,
             club_name TEXT UNIQUE,
-            city TEXT,
+            city TEXT NOT NULL,
             description TEXT,
             tag_sport INTEGER,
             tag_science INTEGER,
@@ -38,15 +38,6 @@ def create_db():
             client_telegram_id INTEGER,
             new_value TEXT,
             action TEXT NOT NULL); 
-        """)
-
-        cur.execute("""CREATE TABLE IF NOT EXISTS clubs_and_members(
-            id INTEGER AUTO_INCREMENT PRIMARY KEY,
-            club_telegram_id INTEGER NOT NULL,
-            member_telegram_id INTEGER NOT NULL,
-            group_id INTEGER,
-            condition INT NOT NULL
-        );
         """)
 
         cur.execute("""CREATE TABLE IF NOT EXISTS clubs_groups(
@@ -137,10 +128,10 @@ def add_art_client_tag(telegram_id, art_value):
         set_client_tags(telegram_id, current_sport, current_science, art_value + current_art)
 
 
-def is_user_client_or_club(telegram_id):
-    # return None если пользователя нет
-    #        1 если пользователь зарегистрирован как клуб
-    #        2 если пользователь зарегистрирован как клиент
+TypeOfUser = namedtuple('TypeOfUser', ['is_client', 'is_club', 'is_unknown'])
+
+
+def is_user_client_or_club(telegram_id: int) -> TypeOfUser:
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         sql = "SELECT * FROM clients WHERE telegram_id = (?)"
@@ -150,14 +141,13 @@ def is_user_client_or_club(telegram_id):
         sql = "SELECT * FROM clubs WHERE telegram_id = (?)"
         cur.execute(sql, (telegram_id,))
         is_user_club = cur.fetchone()
-        if is_user_club:
-            return 1
-        if is_user_client:
-            return 2
-        return None
+
+        is_user_client = bool(is_user_client)
+        is_user_club = bool(is_user_club)
+        return TypeOfUser(is_user_client, is_user_club, not (is_user_client or is_user_club))
 
 
-def add_new_client(telegram_id, client_name):
+def add_new_client(telegram_id, client_name, client_city):
     # добавляет клиента, если он еще не зарегистрирован
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
@@ -169,13 +159,13 @@ def add_new_client(telegram_id, client_name):
         cur.execute(sql, (telegram_id,))
         exists_user = cur.fetchone()
         if exists_user is None:
-            sql = "INSERT INTO clients (telegram_id, first_name)\
-                  VALUES (?, ?)"
-            values = (telegram_id, client_name)
+            sql = "INSERT INTO clients (telegram_id, first_name, city)\
+                  VALUES (?, ?, ?)"
+            values = (telegram_id, client_name, client_city)
             cur.execute(sql, values)
 
 
-def add_new_club(telegram_id, club_name):
+def add_new_club(telegram_id, club_name, club_city):
     # добавляет кружок, если он еще не зарегистрирован
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
@@ -186,20 +176,22 @@ def add_new_club(telegram_id, club_name):
         sql = "SELECT * FROM clubs WHERE telegram_id = (?)"
         cur.execute(sql, (telegram_id,))
         exists_user = cur.fetchone()
-        sql = "SELECT * FROM clubs WHERE club_name = (?)"
-        cur.execute(sql, (club_name,))
-        clubs_with_same_name = cur.fetchone()
 
-        # Rewrite to make exception
-        if clubs_with_same_name is not None:
-            return 0
-
-        elif exists_user is None:
-            sql = "INSERT INTO clubs (telegram_id, club_name)\
-              VALUES (?, ?)"
-            values = (telegram_id, club_name)
+        if exists_user is None:
+            sql = "INSERT INTO clubs (telegram_id, club_name, city)\
+              VALUES (?, ?, ?)"
+            values = (telegram_id, club_name, club_city)
             cur.execute(sql, values)
-            return 1
+
+
+def get_clients_city(telegram_id: int) -> str:
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = "SELECT city FROM clients WHERE telegram_id = ?"
+        value = (telegram_id,)
+        cur.execute(sql, value)
+        clients_city = cur.fetchall()
+        return str(clients_city[0][0])
 
 
 def update_user_data(telegram_id, field_name, field_value, type_of_user):
@@ -337,19 +329,19 @@ def get_id_members_of_club(club_telegram_id):
         return members_telegram_id
 
 
-def get_clubs_to_join():
+ClubInformation = namedtuple('ClubInformation', ['name', 'description', 'city'])
+
+
+def get_clubs_to_join() -> [ClubInformation]:
     with sqlite3.connect('club_to_everyone.db') as conn:
         show_clubs()
         cur = conn.cursor()
-        sql = "SELECT club_name FROM clubs WHERE telegram_id > 0"
+        sql = "SELECT * FROM clubs"
         cur.execute(sql)
-        clubs_names = cur.fetchall()
-        sql = "SELECT description FROM clubs WHERE telegram_id > 0"
-        cur.execute(sql)
-        clubs_description = cur.fetchall()
-        clubs = {}
-        for i in range(0, len(clubs_names)):
-            clubs.update({clubs_names[i][0]: clubs_description[i][0]})
+        clubs_info = cur.fetchall()
+        clubs = []
+        for club in clubs_info:
+            clubs.append(ClubInformation(club[2], club[4], club[3]))
         return clubs
 
 
@@ -364,9 +356,9 @@ def show_clients():
             print(client)
         cur.execute('SELECT * FROM requests WHERE table_to_insert LIKE ("clients")')
         clients = cur.fetchall()
-        # print("REQS :\n")
-        # for client in clients:
-        #     print(client)
+        print("REQS :\n")
+        for client in clients:
+            print(client)
 
 
 def show_clubs():
