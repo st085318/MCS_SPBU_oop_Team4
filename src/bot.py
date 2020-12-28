@@ -4,7 +4,7 @@ import src.new_database as db
 import json
 import telebot
 
-with open(r"C:\Users\SoSirius\PycharmProjects\MCS_SPBU_oop_Team4\credentials/credentials.json") as f:
+with open("credentials/credentials.json") as f:
     credentials = json.load(f)[1]
 bot = telebot.TeleBot(credentials["telegram_bot_token"])
 apikey = credentials["yandex_key"]
@@ -58,7 +58,6 @@ def read_messages(message):
     elif db.is_user_client_or_club(message.chat.id).is_client:
         if message.text == "Записаться":
             clubs = db.Club.get_clubs_to_join()
-            print(clubs)
             ans = ""
 
             for club in clubs:
@@ -105,11 +104,17 @@ def read_messages(message):
                 club_to_show_in_message += club
                 if number_of_club == 5:
                     break
-
-            markup = telebot.types.ReplyKeyboardMarkup()
-            markup.add('Выйти в меню', "Далее >")
-            msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
-            bot.register_next_step_handler(msg, show_clubs_from_yandex, clubs, number_of_club)
+            if club_to_show_in_message:
+                markup = telebot.types.ReplyKeyboardMarkup()
+                markup.add('Выйти в меню', "Далее >")
+                msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
+                bot.register_next_step_handler(msg, show_clubs_from_yandex)
+            else:
+                markup = telebot.types.ReplyKeyboardMarkup()
+                markup.add('Записаться', 'Уйти')
+                markup.row('Фамилия', 'Другие кружки')
+                markup.row('Тест')
+                bot.send_message(message.chat.id, "Простите, подходящих кружков не найдено", reply_markup=markup)
         else:
             markup = telebot.types.ReplyKeyboardMarkup()
             markup.add('Записаться', 'Уйти')
@@ -221,6 +226,10 @@ def member_test(message, test_step=0):
         elif test_step == 10:
             del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Тест пройден, информация сохранена!", reply_markup=del_markup)
+            mark = telebot.types.ReplyKeyboardMarkup()
+            mark.add('Записаться', 'Уйти')
+            mark.row('Тест', 'Другие кружки')
+            msg = bot.send_message(message.chat.id, "А вы хороши!", reply_markup=mark)
             return
     except Exception as e:
         bot.reply_to(message, e)
@@ -391,8 +400,8 @@ def form_query_from_tags(user_id):
     if best_tag == "science":
         return "Образовательный центр"
     elif best_tag == "art":
-        return "Клуб творчества"
-    elif "sport":
+        return "Центр творчества"
+    else:
         return "Секция"
 
 
