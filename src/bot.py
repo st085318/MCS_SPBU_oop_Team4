@@ -102,15 +102,13 @@ def read_messages(message):
                                                     "Приступить?", reply_markup=markup)
             bot.register_next_step_handler(msg, member_test)
         elif message.text == "Другие кружки":
-            global clubss
-            global number_of_club
             tag_query = form_query_from_tags(message.from_user.id)
-            clubss = find_clubs_in_yandex(apikey)
+            clubs = find_clubs_in_yandex(apikey, db.get_clients_city(message.chat.id), tag_query)
             del_markup = telebot.types.ReplyKeyboardRemove()
             bot.send_message(message.chat.id, "А вот и они", reply_markup=del_markup)
             number_of_club = 0
             club_to_show_in_message = ""
-            for club in clubss:
+            for club in clubs:
                 number_of_club += 1
                 club_to_show_in_message += club
                 if number_of_club == 5:
