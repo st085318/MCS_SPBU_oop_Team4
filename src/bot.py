@@ -101,7 +101,7 @@ def read_messages(message):
             global clubss
             global number_of_club
             tag_query = form_query_from_tags(message.from_user.id)
-            clubss = find_clubs_in_yandex(apikey)
+            clubs = find_clubs_in_yandex(apikey, db.get_clients_city(message.chat.id), tag_query)
             del_markup = telebot.types.ReplyKeyboardRemove()
             bot.send_message(message.chat.id, "А вот и они", reply_markup=del_markup)
             number_of_club = 0
@@ -129,30 +129,29 @@ def member_test(message, test_step=0):
             if test_step == 0:
                 db.clear_client_tags(message.from_user.id)
             elif test_step == 1:
-                db.add_science_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 2, 0)
             elif test_step == 2:
-                db.add_sport_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 2, 0, 0)
             elif test_step == 3:
-                db.add_science_client_tag(message.from_user.id, 1)
-                db.add_art_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 1, 0)
+                db.add_tags(message.from_user.id, 0, 0, 2)
             elif test_step == 4:
-                db.add_art_client_tag(message.from_user.id, 1)
-                db.add_sport_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 1)
+                db.add_tags(message.from_user.id, 2, 0, 0)
             elif test_step == 5:
-                db.add_art_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 2)
             elif test_step == 6:
-                db.add_art_client_tag(message.from_user.id, 1)
-                db.add_science_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 1)
+                db.add_tags(message.from_user.id, 0, 2, 0)
             elif test_step == 7:
-                db.add_art_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 0, 2)
             elif test_step == 8:
-                db.add_sport_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 2, 0, 0)
             elif test_step == 9:
-                db.add_science_client_tag(message.from_user.id, 2)
+                db.add_tags(message.from_user.id, 0, 2, 0)
             elif test_step == 10:
-                db.add_art_client_tag(message.from_user.id, 2)
-                db.add_science_client_tag(message.from_user.id, 1)
-            # bot.register_next_step_handler(client_name, add_client)
+                db.add_tags(message.from_user.id, 0, 0, 2)
+                db.add_tags(message.from_user.id, 0, 1, 0)
             pass
         elif message.text == 'Нет':
             if test_step == 0:
@@ -162,24 +161,23 @@ def member_test(message, test_step=0):
             elif test_step == 1:
                 pass
             elif test_step == 2:
-                db.add_sport_client_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 3:
-                db.add_sport_client_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 4:
-                db.add_sport_client_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 5:
                 pass
             elif test_step == 6:
-                db.add_science_client_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, 0, -1, 0)
             elif test_step == 7:
                 pass
             elif test_step == 8:
-                db.add_sport_client_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, -1, 0, 0)
             elif test_step == 9:
-                db.add_science_client_tag(message.from_user.id, -1)
+                db.add_tags(message.from_user.id, 0, -1, 0)
             elif test_step == 10:
                 pass
-            # bot.register_next_step_handler(club_name, add_club)
         else:
             msg = bot.send_message(message.chat.id, "Пожалуйста, введите один из предложенных вариантов.")
             bot.register_next_step_handler(msg, member_test, test_step)
@@ -230,7 +228,6 @@ def member_test(message, test_step=0):
             del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Тест пройден, информация сохранена!", reply_markup=del_markup)
             return
-        # club_name = bot.send_message(message.chat.id, "Как называется ваш кружок?")
     except Exception as e:
         bot.reply_to(message, e)
 
@@ -256,7 +253,6 @@ def get_name_to_register(message):
             msg = bot.send_message(message.chat.id, "Пожалуйста, введите один из предложенных вариантов.")
             bot.register_next_step_handler(msg, get_name_to_register)
             return
-        # only on Saturday
     except Exception as e:
         bot.reply_to(message, e)
 
