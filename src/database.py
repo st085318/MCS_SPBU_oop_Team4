@@ -61,7 +61,15 @@ def create_db():
 def set_tags(telegram_id: int, sport_value: int, science_value: int, art_value: int):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
-        sql = ("""INSERT or REPLACE INTO clients_tags(telegram_id, tag_sport, tag_science, tag_art)\
+        sql = "UPDATE clients_tags SET tag_sport = ? WHERE telegram_id = ?"
+        values = (sport_value, telegram_id)
+        cur.execute(sql, values)
+
+
+def set_club_tags(telegram_id, sport_value, science_value, art_value):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        sql = ("""INSERT or REPLACE INTO clubs(telegram_id, tag_sport, tag_science, tag_art)\
         VALUES (?, ?, ?, ?)""")
         values = (telegram_id, sport_value, science_value, art_value)
         cur.execute(sql, values)
@@ -95,8 +103,6 @@ def get_client_tags(telegram_id):
         current_art = cur.fetchone()[0]
 
     return {"art": current_art, "sport": current_sport, "science": current_science}
-
-
 
 
 TypeOfUser = namedtuple('TypeOfUser', ['is_client', 'is_club', 'is_unknown'])
@@ -139,7 +145,7 @@ def add_new_client(telegram_id, client_name, client_city):
             values = (telegram_id, 0, 0, 0)
             cur.execute(sql, values)
             clear_tags(telegram_id)
-            
+
 
 def add_new_club(telegram_id, club_name, club_city):
     # добавляет кружок, если он еще не зарегистрирован

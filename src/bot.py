@@ -377,9 +377,6 @@ def show_clubs_from_yandex(message):
     markup.row('Тест')
     global number_of_club
     global clubss
-    #print(clubss)
-    #print("\n")
-    #print(number_of_club)
     if number_of_club >= len(clubss):
         bot.send_message(message.chat.id, "Больше кружков не найдено", reply_markup=markup)
     else:
