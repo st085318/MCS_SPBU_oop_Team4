@@ -39,15 +39,6 @@ def create_db():
             tag_art INTEGER);
         """)
 
-        cur.execute("""CREATE TABLE IF NOT EXISTS clubs_and_members(
-            id INTEGER AUTO_INCREMENT PRIMARY KEY,
-            club_telegram_id INTEGER NOT NULL,
-            member_telegram_id INTEGER NOT NULL,
-            group_id INTEGER,
-            condition INT NOT NULL
-        );
-        """)
-
         cur.execute("""CREATE TABLE IF NOT EXISTS requests(
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             table_to_insert TEXT NOT NULL,
@@ -90,6 +81,22 @@ def add_tags(telegram_id: int, sport_value: int, science_value: int, art_value: 
         current_science = current_row[3]
         current_art = current_row[4]
         set_tags(telegram_id, sport_value + current_sport, science_value + current_science, art_value + current_art)
+        
+        
+def get_client_tags(telegram_id):
+    with sqlite3.connect('club_to_everyone.db') as conn:
+        cur = conn.cursor()
+        tid = (telegram_id,)
+        cur.execute('SELECT tag_sport FROM clients WHERE telegram_id = ?', tid)
+        current_sport = cur.fetchone()[0]
+        cur.execute('SELECT tag_science FROM clients WHERE telegram_id = ?', tid)
+        current_science = cur.fetchone()[0]
+        cur.execute('SELECT tag_art FROM clients WHERE telegram_id = ?', tid)
+        current_art = cur.fetchone()[0]
+
+    return {"art": current_art, "sport": current_sport, "science": current_science}
+
+
 
 
 TypeOfUser = namedtuple('TypeOfUser', ['is_client', 'is_club', 'is_unknown'])
