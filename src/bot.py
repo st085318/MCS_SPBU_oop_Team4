@@ -232,6 +232,11 @@ def member_test(message, test_step=0):
         elif test_step == 10:
             del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Тест пройден, информация сохранена!", reply_markup=del_markup)
+            mark = telebot.types.ReplyKeyboardMarkup()
+            mark.add('Записаться', 'Уйти')
+            mark.row('Фамилия', 'Другие кружки')
+            mark.row('Тест')
+            msg = bot.send_message(message.chat.id, "А вы хороши!", reply_markup=mark)
             return
     except Exception as e:
         bot.reply_to(message, e)

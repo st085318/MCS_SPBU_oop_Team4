@@ -63,11 +63,16 @@ def set_tags(telegram_id: int, sport_value: int, science_value: int, art_value: 
         cur = conn.cursor()
         sql = "SELECT * FROM clients_tags WHERE telegram_id = (?)"
         cur.execute(sql, (telegram_id,))
-        exists_user = cur.fetchall()
+        exists_user = cur.fetchone()
         if exists_user is None:
             sql = "INSERT INTO clients_tags (telegram_id, tag_sport, tag_science, tag_art) VALUES (?, ?, ?, ?)"
             values = (telegram_id, sport_value, science_value, art_value)
             cur.execute(sql, values)
+
+            sql = "SELECT * FROM clients_tags WHERE telegram_id = ?"
+            values = (telegram_id, )
+            cur.execute(sql, values)
+            print(cur.fetchall())
         else:
             sql = "UPDATE clients_tags SET tag_sport = ? WHERE telegram_id = ?"
             values = (sport_value, telegram_id)
