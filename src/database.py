@@ -48,6 +48,15 @@ def create_db():
             action TEXT NOT NULL); 
         """)
 
+        cur.execute("""CREATE TABLE IF NOT EXISTS clubs_and_members(
+            id INTEGER AUTO_INCREMENT PRIMARY KEY,
+            club_telegram_id INTEGER NOT NULL,
+            member_telegram_id INTEGER NOT NULL,
+            group_id INTEGER,
+            condition INT NOT NULL
+        );
+        """)
+
         cur.execute("""CREATE TABLE IF NOT EXISTS clubs_groups(
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
             club_telegram_id INTEGER NOT NULL,
