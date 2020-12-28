@@ -21,8 +21,8 @@ def create_db():
         """)
 
         cur.execute("""CREATE TABLE IF NOT EXISTS clients_tags(
-            id INTEGER AUTO_INCREMENT PRIMARY KEY,
-            telegram_id INTEGER UNIQUE NOT NULL,
+            id INTEGER AUTO_INCREMENT ,
+            telegram_id INTEGER PRIMARY KEY,
             tag_sport INTEGER,
             tag_science INTEGER,
             tag_art INTEGER);
@@ -61,9 +61,23 @@ def create_db():
 def set_tags(telegram_id: int, sport_value: int, science_value: int, art_value: int):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
-        sql = "UPDATE clients_tags SET tag_sport = ? WHERE telegram_id = ?"
-        values = (sport_value, telegram_id)
-        cur.execute(sql, values)
+        sql = "SELECT * FROM clients_tags WHERE telegram_id = (?)"
+        cur.execute(sql, (telegram_id,))
+        exists_user = cur.fetchall()
+        if exists_user is None:
+            sql = "INSERT INTO clients_tags (telegram_id, tag_sport, tag_science, tag_art) VALUES (?, ?, ?, ?)"
+            values = (telegram_id, sport_value, science_value, art_value)
+            cur.execute(sql, values)
+        else:
+            sql = "UPDATE clients_tags SET tag_sport = ? WHERE telegram_id = ?"
+            values = (sport_value, telegram_id)
+            cur.execute(sql, values)
+            sql = "UPDATE clients_tags SET tag_science = ? WHERE telegram_id = ?"
+            values = (science_value, telegram_id)
+            cur.execute(sql, values)
+            sql = "UPDATE clients_tags SET tag_art = ? WHERE telegram_id = ?"
+            values = (art_value, telegram_id)
+            cur.execute(sql, values)
 
 
 def set_club_tags(telegram_id, sport_value, science_value, art_value):
@@ -95,12 +109,18 @@ def get_client_tags(telegram_id):
     with sqlite3.connect('club_to_everyone.db') as conn:
         cur = conn.cursor()
         tid = (telegram_id,)
-        cur.execute('SELECT tag_sport FROM clients WHERE telegram_id = ?', tid)
-        current_sport = cur.fetchone()[0]
-        cur.execute('SELECT tag_science FROM clients WHERE telegram_id = ?', tid)
-        current_science = cur.fetchone()[0]
-        cur.execute('SELECT tag_art FROM clients WHERE telegram_id = ?', tid)
-        current_art = cur.fetchone()[0]
+        cur.execute('SELECT tag_sport FROM clients_tags WHERE telegram_id = ?', tid)
+        current_sport = cur.fetchone()
+        if current_sport is None:
+            current_sport = 0
+        cur.execute('SELECT tag_science FROM clients_tags WHERE telegram_id = ?', tid)
+        current_science = cur.fetchone()
+        if current_science is None:
+            current_science = 0
+        cur.execute('SELECT tag_art FROM clients_tags WHERE telegram_id = ?', tid)
+        current_art = cur.fetchone()
+        if current_art is None:
+            current_art = 0
 
     return {"art": current_art, "sport": current_sport, "science": current_science}
 
@@ -140,11 +160,13 @@ def add_new_client(telegram_id, client_name, client_city):
                   VALUES (?, ?, ?)"
             values = (telegram_id, client_name, client_city)
             cur.execute(sql, values)
-            sql = "INSERT INTO clients_tags (telegram_id, tag_sport, tag_science, tag_art)\
-                              VALUES (?, ?, ?, ?)"
-            values = (telegram_id, 0, 0, 0)
-            cur.execute(sql, values)
-            clear_tags(telegram_id)
+            #sql = "INSERT INTO clients_tags (telegram_id, tag_sport, tag_science, tag_art)\
+            #                  VALUES (?, ?, ?, ?)"
+            #values = (telegram_id, 0, 0, 0)
+            #cur.execute(sql, values)
+    if exists_user is None:
+        clear_tags(telegram_id)
+        show_clients()
 
 
 def add_new_club(telegram_id, club_name, club_city):
