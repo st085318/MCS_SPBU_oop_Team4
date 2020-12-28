@@ -9,8 +9,7 @@ Base = declarative_base()
 
 TypeOfUser = namedtuple('TypeOfUser', ['is_client', 'is_club', 'is_unknown'])
 
-ClubInformation = namedtuple('ClubInformation', ['name', 'description', 'city', 'art_tag',\
-                                                 'science_tag', 'sport_tag'])
+ClubInformation = namedtuple('ClubInformation', ['name', 'description', 'city'])
 
 
 class Client(Base):
@@ -104,8 +103,7 @@ class Club(Base):
         clubs_objects = session.query(Club)
         clubs = []
         for club in clubs_objects:
-            clubs.append(ClubInformation(club.club_name, club.description, club.city,
-                                         club.art_tag, club.science_tag, club.sport_tag))
+            clubs.append(ClubInformation(club.club_name, club.description, club.city))
         return clubs
 
     @staticmethod
@@ -235,6 +233,8 @@ class Tag(Base):
         Session = sessionmaker(bind=engine)
         session = Session()
         user = session.query(Tag).filter(Tag.telegram_id == telegram_id).first()
+        if user is None:
+            user = Tag(telegram_id, 0, 0, 0)
         return {"art": user.art_tag, "sport": user.sport_tag, "science": user.science_tag}
 
 
@@ -248,5 +248,6 @@ def is_user_client_or_club(tg_id: int) -> TypeOfUser:
     return TypeOfUser(our_client, our_club, not (our_client or our_club))
 
 
-if __name__ == "__main__":
+def create_db():
     Base.metadata.create_all(engine)
+
