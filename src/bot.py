@@ -1,11 +1,7 @@
-import os
-import sys
-import telebot
-import ast
-from telebot import types
-from string import Template
-import src.database as db
 from src.yandex_organization import find_clubs_in_yandex
+import src.database as db
+import json
+import telebot
 
 with open("credentials/credentials.json") as f:
     credentials = json.load(f)[1]
