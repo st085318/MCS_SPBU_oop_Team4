@@ -15,7 +15,7 @@ number_of_club = 0
 def start_handler(message):
     msg = bot.send_message(message.chat.id, "Привет, не болей!")
     if db.is_user_client_or_club(message.chat.id).is_unknown:
-        markup = types.ReplyKeyboardMarkup()
+        markup = telebot.types.ReplyKeyboardMarkup()
         markup.row('Я ищу кружок')
         markup.row('Я есть кружок')
         bot.send_message(message.chat.id, "Кто вы?", reply_markup=markup)
@@ -73,14 +73,14 @@ def read_messages(message):
                         description = "Описание не предоставлено"
                     ans += str(club.name) + ":\n" + description + "\n\n"
             if ans:
-                del_markup = types.ReplyKeyboardRemove()
+                del_markup = telebot.types.ReplyKeyboardRemove()
                 bot.send_message(message.chat.id, "Список клубов и их описание. "
                                               "Введите название клуба, "
                                               "если хотетите записаться, или esc, чтобы выйти из режима записи",
                              reply_markup=del_markup)
                 msg = bot.send_message(message.chat.id, ans)
 
-                bot.register_next_step_handler(msg, join_to_club)
+                bot.register_next_step_handler(msg, join_club)
             else:
                 bot.send_message(message.chat.id, "У нас пока нет кружков в вашем городе(")
         elif message.text == "Уйти":
@@ -127,7 +127,7 @@ def member_test(message, test_step=0):
     try:
         if message.text == 'Да':
             if test_step == 0:
-                db.clear_client_tags(message.from_user.id)
+                db.clear_tags(message.from_user.id)
             elif test_step == 1:
                 db.add_tags(message.from_user.id, 0, 2, 0)
             elif test_step == 2:
