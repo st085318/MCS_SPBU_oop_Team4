@@ -138,7 +138,8 @@ def add_new_client(telegram_id, client_name, client_city):
                               VALUES (?, ?, ?, ?)"
             values = (telegram_id, 0, 0, 0)
             cur.execute(sql, values)
-
+            clear_tags(telegram_id)
+            
 
 def add_new_club(telegram_id, club_name, club_city):
     # добавляет кружок, если он еще не зарегистрирован
