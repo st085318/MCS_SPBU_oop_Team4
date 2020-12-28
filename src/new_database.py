@@ -18,9 +18,6 @@ class Client(Base):
     telegram_id = Column(Integer, primary_key=True, nullable=False)
     client_name = Column(String, nullable=False)
     city = Column(String, nullable=False)
-    tag_sport = Column(Integer)
-    tag_science = Column(Integer)
-    tag_art = Column(Integer)
 
     def __init__(self, telegram_id: int, name: str, city: str):
         self.telegram_id = telegram_id
@@ -51,16 +48,18 @@ class Client(Base):
         return client.client_name
 
     @staticmethod
-    def update_field(telegram_id: int, field_name: str):
+    def update_field(telegram_id: int, field_name: str, field_value: str):
         Session = sessionmaker(bind=engine)
         session = Session()
         client = session.query(Client).\
             filter(Client.telegram_id == telegram_id).first()
-        if field_name == 0:
-            membership.condition = 1
-
-        session.add(membership)
+        if field_name == "client_name":
+            client.name = field_value
+        elif field_name == "city":
+            client.city = field_value
+        session.add(client)
         session.commit()
+
 
 class Club(Base):
     __tablename__ = 'clubs'
@@ -68,9 +67,6 @@ class Club(Base):
     club_name = Column(String, nullable=False, unique=True)
     city = Column(String, nullable=False)
     description = Column(String)
-    art_tag = Column(Integer)
-    science_tag = Column(Integer)
-    sport_tag = Column(Integer)
 
     def __init__(self, telegram_id: int, name: str, city: str):
         self.telegram_id = telegram_id
@@ -111,6 +107,21 @@ class Club(Base):
             clubs.append(ClubInformation(club.club_name, club.description, club.city,
                                          club.art_tag, club.science_tag, club.sport_tag))
         return clubs
+
+    @staticmethod
+    def update_field(telegram_id: int, field_name: str, field_value: str):
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        club = session.query(Club).\
+            filter(Club.telegram_id == telegram_id).first()
+        if field_name == "club_name":
+            club.club_name = field_value
+        elif field_name == "city":
+            club.city = field_value
+        elif field_name == "description":
+            club.description = field_value
+        session.add(club)
+        session.commit()
 
 
 class Membership(Base):
@@ -182,6 +193,49 @@ class Membership(Base):
             clubs_telegram_id += str(membership.club_telegram_id) + ";"
         clubs_telegram_id = clubs_telegram_id[:-1]
         return clubs_telegram_id
+
+
+class Tag(Base):
+    __tablename__ = 'tags'
+    telegram_id = Column(Integer, primary_key=True, nullable=False)
+    science_tag = Column(Integer, nullable=False)
+    sport_tag = Column(Integer, nullable=False)
+    art_tag = Column(Integer, nullable=False)
+
+    def __init__(self, telegram_id: int, art: int, science: int, sport: int):
+        self.telegram_id = telegram_id
+        self.art_tag = art
+        self.science_tag = science
+        self.sport_tag = sport
+
+    @staticmethod
+    def set_tags(telegram_id: int, sport: int, science: int, art: int):
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        user = session.query(Tag).filter(Tag.telegram_id == telegram_id).first()
+        if user is None:
+            user = Tag(telegram_id, sport, science, art)
+        else:
+            user.sport_tag = sport
+            user.science_tag = science
+            user.art_tag = art
+        session.add(user)
+        session.commit()
+
+    @staticmethod
+    def add_tags(telegram_id: int, sport_add_value: int, science_add_value: int, art_add_value: int):
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        user = session.query(Tag).filter(Tag.telegram_id == telegram_id).first()
+        Tag.set_tags(telegram_id, user.sport_tag + sport_add_value, user.science_tag + science_add_value,
+                     user.art_tag + art_add_value)
+
+    @staticmethod
+    def get_tags(telegram_id: int) -> dict:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        user = session.query(Tag).filter(Tag.telegram_id == telegram_id).first()
+        return {"art": user.art_tag, "sport": user.sport_tag, "science": user.science_tag}
 
 
 def is_user_client_or_club(tg_id: int) -> TypeOfUser:
