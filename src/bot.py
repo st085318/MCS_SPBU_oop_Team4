@@ -4,7 +4,7 @@ import src.new_database as db
 import json
 import telebot
 
-with open("credentials/credentials.json") as f:
+with open(r"C:\Users\SoSirius\PycharmProjects\MCS_SPBU_oop_Team4\credentials\credentials.json") as f:
     credentials = json.load(f)[1]
 bot = telebot.TeleBot(credentials["telegram_bot_token"])
 apikey = credentials["yandex_key"]
@@ -108,7 +108,7 @@ def read_messages(message):
                 markup = telebot.types.ReplyKeyboardMarkup()
                 markup.add('Выйти в меню', "Далее >")
                 msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
-                bot.register_next_step_handler(msg, show_clubs_from_yandex)
+                bot.register_next_step_handler(msg, show_clubs_from_yandex, clubs, number_of_club)
             else:
                 markup = telebot.types.ReplyKeyboardMarkup()
                 markup.add('Записаться', 'Уйти')
@@ -406,5 +406,5 @@ def form_query_from_tags(user_id):
 
 
 if __name__ == '__main__':
-    db.create_db()
+    #db.create_db()
     bot.polling(none_stop=True)
