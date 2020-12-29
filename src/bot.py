@@ -4,6 +4,7 @@ import src.new_database as db
 import json
 import telebot
 
+# получаем учётные данные
 with open("credentials/credentials.json") as f:
     credentials = json.load(f)[1]
 bot = telebot.TeleBot(credentials["telegram_bot_token"])
@@ -12,6 +13,7 @@ apikey = credentials["yandex_key"]
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
+    # начало работы бота
     msg = bot.send_message(message.chat.id, "Привет, не болей!")
     if db.is_user_client_or_club(message.chat.id).is_unknown:
         markup = telebot.types.ReplyKeyboardMarkup()
@@ -23,6 +25,7 @@ def start_handler(message):
 
 @bot.message_handler(commands=['help'])
 def help_information(message):
+    # команда /help, получить список команд
     bot.send_message(message.chat.id, "It's help!")
     if db.is_user_client_or_club(message.chat.id).is_club:
         bot.send_message(message.chat.id, 'Отправьте: \n"Описание", чтобы изменить описание своего клуба\n'
@@ -33,6 +36,7 @@ def help_information(message):
                                           '"Уйти", чтобы уйти из клуба')
 
 
+# команды, совершаемые ботом
 @bot.message_handler(content_types=['text'])
 def bot_new_description(message):
     del_markup = telebot.types.ReplyKeyboardRemove()
@@ -115,6 +119,7 @@ def bot_show_other_clubs(message):
 
 @bot.message_handler(content_types=['text'])
 def read_messages(message):
+    # в зависимости от нажатой кнопки, бот выполнит определенную команду
     if db.is_user_client_or_club(message.chat.id).is_club:
         if message.text == "Описание":
             bot_new_description(message)
@@ -144,6 +149,8 @@ def read_messages(message):
 
 
 def member_test(message, test_step=0):
+    # тест по выяснению предпочтений, вопросы берутся из текстового файла. При определенных ответах
+    # у участника изменяются соответсвующие значения тегов
     try:
         if message.text == 'Да':
             if test_step == 0:
@@ -402,6 +409,7 @@ def show_clubs_from_yandex(message, clubs, number_of_club):
 
 
 def form_query_from_tags(user_id):
+    # формирование запроса по тегам пользователя
     tags = db.Tag.get_tags(user_id)
     for field in ["art", "sport", "science"]:
         if tags[field] is None:
