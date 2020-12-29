@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, create_engine, BOOLEAN
+from sqlalchemy import Column, Integer, String, create_engine, BOOLEAN
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from collections import namedtuple
@@ -165,7 +165,7 @@ class Membership(Base):
             session.commit()
 
     @staticmethod
-    def get_id_members_of_club(club_telegram_id: int) -> str:
+    def get_id_members_of_club(club_telegram_id: int):
         Sess = sessionmaker(bind=engine)
         session = Sess()
         memberships = session.query(Membership).\
@@ -250,4 +250,3 @@ def is_user_client_or_club(tg_id: int) -> TypeOfUser:
 
 def create_db():
     Base.metadata.create_all(engine)
-

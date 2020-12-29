@@ -25,6 +25,3 @@ def find_clubs_in_yandex(apikey: str, city="Москва", search_query="Сек�
     else:
         companies_with_info.append("BAD ANSWER")
     return companies_with_info
-
-
-

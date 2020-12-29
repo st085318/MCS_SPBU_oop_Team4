@@ -174,10 +174,6 @@ def add_new_client(telegram_id, client_name, client_city):
                   VALUES (?, ?, ?)"
             values = (telegram_id, client_name, client_city)
             cur.execute(sql, values)
-            #sql = "INSERT INTO clients_tags (telegram_id, tag_sport, tag_science, tag_art)\
-            #                  VALUES (?, ?, ?, ?)"
-            #values = (telegram_id, 0, 0, 0)
-            #cur.execute(sql, values)
     if exists_user is None:
         clear_tags(telegram_id)
         show_clients()
@@ -405,4 +401,3 @@ def show_members():
         print("CLUBS and their MEMS:\n")
         for club in clubs:
             print(club)
-

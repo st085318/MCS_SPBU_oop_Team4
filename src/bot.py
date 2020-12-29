@@ -1,5 +1,5 @@
 from src.yandex_organization import find_clubs_in_yandex
-#import src.database as db
+from src.test_questions import questions
 import src.new_database as db
 import json
 import telebot
@@ -25,12 +25,12 @@ def start_handler(message):
 def help_information(message):
     bot.send_message(message.chat.id, "It's help!")
     if db.is_user_client_or_club(message.chat.id).is_club:
-        msg = bot.send_message(message.chat.id, 'Отправьте: \n"Описание", чтобы изменить описание своего клуба\n'
-                                                '"Участники", чтобы узнать список участников клуба')
+        bot.send_message(message.chat.id, 'Отправьте: \n"Описание", чтобы изменить описание своего клуба\n'
+                                          '"Участники", чтобы узнать список участников клуба')
     else:
-        msg = bot.send_message(message.chat.id, 'Отправьте: \n'
-                                                '"Записаться", записаться на клуб\n'
-                                                '"Уйти", чтобы уйти из клуба')
+        bot.send_message(message.chat.id, 'Отправьте: \n'
+                                          '"Записаться", записаться на клуб\n'
+                                          '"Уйти", чтобы уйти из клуба')
 
 
 @bot.message_handler(content_types=['text'])
@@ -40,38 +40,34 @@ def read_messages(message):
             del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Введите новое описание", reply_markup=del_markup)
             bot.register_next_step_handler(msg, add_club_description)
-        # elif message.text == "Название":
-        #    msg = bot.send_message(message.chat.id, "Введите новое название")
-        #    bot.register_next_step_handler(msg, add_club_name)
         elif message.text == "Участники":
             members = db.Membership.get_id_members_of_club(message.chat.id)
             if members is None:
                 bot.send_message(message.chat.id, "У вас нет членов")
             else:
-                list_of_members = members.split(";")
-                members = ""
-                for member in list_of_members:
-                    members += db.Client.get_name(int(member)) + "\n"
+                members = '\n'.join(members.split(";"))
                 bot.send_message(message.chat.id, str(members))
         else:
             bot.send_message(message.chat.id, "Простите, я не знаю такой команды...")
     elif db.is_user_client_or_club(message.chat.id).is_client:
         if message.text == "Записаться":
             clubs = db.Club.get_clubs_to_join()
-            ans = ""
-
+            clubs_of_your_city = []
             for club in clubs:
                 if club.city == db.Client.get_city(message.chat.id):
                     description = str(club.description)
                     if club.description is None:
                         description = "Описание не предоставлено"
-                    ans += str(club.name) + ":\n" + description + "\n\n"
+
+                    one_more_club = ':\n'.join([str(club.name), description])
+                    clubs_of_your_city.append(one_more_club)
+            ans = '\n\n'.join(clubs_of_your_city)
             if ans:
                 del_markup = telebot.types.ReplyKeyboardRemove()
                 bot.send_message(message.chat.id, "Список клубов и их описание. "
-                                              "Введите название клуба, "
-                                              "если хотетите записаться, или esc, чтобы выйти из режима записи",
-                             reply_markup=del_markup)
+                                                  "Введите название клуба, "
+                                                  "если хотетите записаться, или esc, чтобы выйти из режима записи",
+                                 reply_markup=del_markup)
                 msg = bot.send_message(message.chat.id, ans)
 
                 bot.register_next_step_handler(msg, join_club)
@@ -119,7 +115,7 @@ def read_messages(message):
             markup = telebot.types.ReplyKeyboardMarkup()
             markup.add('Записаться', 'Уйти')
             markup.row('Тест', 'Другие кружки')
-            bot.send_message(message.chat.id, "Простите, я не знаю такой команды...", reply_markup= markup)
+            bot.send_message(message.chat.id, "Простите, я не знаю такой команды...", reply_markup=markup)
 
 
 def member_test(message, test_step=0):
@@ -183,53 +179,43 @@ def member_test(message, test_step=0):
             return
 
         if test_step == 0:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Учитесь новым знаниям очень быстро, схватывая всё на лету?")
+            msg = bot.send_message(message.chat.id, questions[0])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
             return
         elif test_step == 1:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Энергичны и нуждаетесь в большом объёме движений?")
+            msg = bot.send_message(message.chat.id, questions[1])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 2:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Часто читаете художественную литературу?")
+            msg = bot.send_message(message.chat.id, questions[2])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 3:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Имеете хорошую координацию движений?")
+            msg = bot.send_message(message.chat.id, questions[3])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 4:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Хорошо поёте?")
+            msg = bot.send_message(message.chat.id, questions[4])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 5:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Часто читаете научную или научно-популярную литературу?")
+            msg = bot.send_message(message.chat.id, questions[5])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 6:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Любите выражать свои чувства через лепку/рисование?")
+            msg = bot.send_message(message.chat.id, questions[6])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 7:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Предпочитаете проводить свободное время в подвижных играх?")
+            msg = bot.send_message(message.chat.id, questions[7])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 8:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Умеете составлять умозаключения?")
+            msg = bot.send_message(message.chat.id, questions[8])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 9:
-            msg = bot.send_message(message.chat.id, "Вы можете сказать про себя, что Вы:\n"
-                                                    "Сочиняете рассказы или стихи?")
+            msg = bot.send_message(message.chat.id, questions[9])
             bot.register_next_step_handler(msg, member_test, test_step + 1)
         elif test_step == 10:
             del_markup = telebot.types.ReplyKeyboardRemove()
-            msg = bot.send_message(message.chat.id, "Тест пройден, информация сохранена!", reply_markup=del_markup)
+            bot.send_message(message.chat.id, "Тест пройден, информация сохранена!", reply_markup=del_markup)
             mark = telebot.types.ReplyKeyboardMarkup()
             mark.add('Записаться', 'Уйти')
             mark.row('Тест', 'Другие кружки')
-            msg = bot.send_message(message.chat.id, "А вы хороши!", reply_markup=mark)
+            bot.send_message(message.chat.id, "А вы хороши!", reply_markup=mark)
             return
     except Exception as e:
         bot.reply_to(message, e)
@@ -313,7 +299,6 @@ def add_club_description(message):
     markup.row('Описание')
     db.Club.update_field(message.chat.id, "description", message.text)
     bot.send_message(message.chat.id, "Описание клуба изменено", reply_markup=markup)
-    # print(message.text)
 
 
 def get_clubs_name(message):
@@ -323,7 +308,8 @@ def get_clubs_name(message):
         city = bot.send_message(message.chat.id, "Из какого вы города?")
         bot.register_next_step_handler(city, add_club, club_name)
     else:
-        new_name = bot.send_message(message.chat.id, "Кружок с таким именем уже существует - придумайте другое название")
+        bot.send_message(message.chat.id,
+                         "Кружок с таким именем уже существует - придумайте другое название")
         bot.register_next_step_handler(message.chat.id, get_clubs_name)
 
 
