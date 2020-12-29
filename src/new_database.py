@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from sqlalchemy import Column, Integer, String, create_engine, BOOLEAN
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -7,13 +8,13 @@ engine = create_engine('sqlite:///test.db', echo=False)
 
 Base = declarative_base()
 
-# пользователь может быть клиентом или руководителем клуба
+# РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РјРѕР¶РµС‚ Р±С‹С‚СЊ РєР»РёРµРЅС‚РѕРј РёР»Рё СЂСѓРєРѕРІРѕРґРёС‚РµР»РµРј РєР»СѓР±Р°
 TypeOfUser = namedtuple('TypeOfUser', ['is_client', 'is_club', 'is_unknown'])
 
 ClubInformation = namedtuple('ClubInformation', ['name', 'description', 'city'])
 
 
-# класс с таблицей и методами клиентов
+# РєР»Р°СЃСЃ СЃ С‚Р°Р±Р»РёС†РµР№ Рё РјРµС‚РѕРґР°РјРё РєР»РёРµРЅС‚РѕРІ
 class Client(Base):
     __tablename__ = 'clients'
     telegram_id = Column(Integer, primary_key=True, nullable=False)
@@ -61,7 +62,7 @@ class Client(Base):
         session.commit()
 
 
-# класс с таблицей и методами клубов
+# РєР»Р°СЃСЃ СЃ С‚Р°Р±Р»РёС†РµР№ Рё РјРµС‚РѕРґР°РјРё РєР»СѓР±РѕРІ
 class Club(Base):
     __tablename__ = 'clubs'
     telegram_id = Column(Integer, primary_key=True, nullable=False)
@@ -124,7 +125,7 @@ class Club(Base):
         session.commit()
 
 
-# класс, помогающий отслеживать вступление и выход из клубов
+# РєР»Р°СЃСЃ, РїРѕРјРѕРіР°СЋС‰РёР№ РѕС‚СЃР»РµР¶РёРІР°С‚СЊ РІСЃС‚СѓРїР»РµРЅРёРµ Рё РІС‹С…РѕРґ РёР· РєР»СѓР±РѕРІ
 class Membership(Base):
     __tablename__ = "membership"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -196,7 +197,7 @@ class Membership(Base):
         return clubs_telegram_id
 
 
-# класс, отвечающий за теги пользователей и клубов
+# РєР»Р°СЃСЃ, РѕС‚РІРµС‡Р°СЋС‰РёР№ Р·Р° С‚РµРіРё РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ Рё РєР»СѓР±РѕРІ
 class Tag(Base):
     __tablename__ = 'tags'
     telegram_id = Column(Integer, primary_key=True, nullable=False)
