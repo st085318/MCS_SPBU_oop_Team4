@@ -28,9 +28,11 @@ def help_information(message):
         bot.send_message(message.chat.id, 'Отправьте: \n"Описание", чтобы изменить описание своего клуба\n'
                                           '"Участники", чтобы узнать список участников клуба')
     else:
-        bot.send_message(message.chat.id, 'Отправьте: \n'
-                                          '"Записаться", записаться на клуб\n'
-                                          '"Уйти", чтобы уйти из клуба')
+        bot.send_message(message.chat.id, 'Нажмите: \n'
+                                          '"Записаться", записаться на клуб-партнер\n'
+                                          '"Уйти", чтобы уйти из клуба-партнера\n'
+                                          '"Тест", чтобы пройти тест на определение предпочтений\n'
+                                          '"Другие кружки", чтобы увидеть подходящие кружки из Яндекса')
 
 
 @bot.message_handler(content_types=['text'])
@@ -72,7 +74,10 @@ def read_messages(message):
 
                 bot.register_next_step_handler(msg, join_club)
             else:
-                bot.send_message(message.chat.id, "У нас пока нет кружков в вашем городе(")
+                markup = telebot.types.ReplyKeyboardMarkup()
+                markup.add('Записаться', 'Уйти')
+                markup.row('Тест', 'Другие кружки')
+                bot.send_message(message.chat.id, "У нас пока нет кружков в вашем городе(", reply_markup=markup)
         elif message.text == "Уйти":
             del_markup = telebot.types.ReplyKeyboardRemove()
             msg = bot.send_message(message.chat.id, "Введите название клуба, который вы хотите покинуть",
@@ -92,24 +97,20 @@ def read_messages(message):
             clubs = find_clubs_in_yandex(apikey, db.Client.get_city(message.chat.id), tag_query)
             del_markup = telebot.types.ReplyKeyboardRemove()
             bot.send_message(message.chat.id, "А вот и они", reply_markup=del_markup)
-            number_of_club = 0
+            number_of_last_viewed_club = 0
             club_to_show_in_message = ""
-
-            for club in clubs:
-                number_of_club += 1
-                club_to_show_in_message += club
-                if number_of_club == 5:
-                    break
+            club_to_show_in_message = "\n".join(
+                [club for club in clubs[number_of_last_viewed_club:number_of_last_viewed_club+5]])
+            number_of_last_viewed_club += 5
             if club_to_show_in_message:
                 markup = telebot.types.ReplyKeyboardMarkup()
                 markup.add('Выйти в меню', "Далее >")
                 msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
-                bot.register_next_step_handler(msg, show_clubs_from_yandex, clubs, number_of_club)
+                bot.register_next_step_handler(msg, show_clubs_from_yandex, clubs, number_of_last_viewed_club)
             else:
                 markup = telebot.types.ReplyKeyboardMarkup()
                 markup.add('Записаться', 'Уйти')
-                markup.row('Фамилия', 'Другие кружки')
-                markup.row('Тест')
+                markup.row('Тест', 'Другие кружки')
                 bot.send_message(message.chat.id, "Простите, подходящих кружков не найдено", reply_markup=markup)
         else:
             markup = telebot.types.ReplyKeyboardMarkup()
@@ -150,8 +151,10 @@ def member_test(message, test_step=0):
             pass
         elif message.text == 'Нет':
             if test_step == 0:
-                del_markup = telebot.types.ReplyKeyboardRemove()
-                bot.send_message(message.chat.id, "Отмена теста.", reply_markup=del_markup)
+                markup = telebot.types.ReplyKeyboardMarkup()
+                markup.add('Записаться', 'Уйти')
+                markup.row('Тест', 'Другие кружки')
+                bot.send_message(message.chat.id, "Отмена теста.", reply_markup=markup)
                 return
             elif test_step == 1:
                 pass
@@ -269,7 +272,7 @@ def join_club(message):
     markup.add('Записаться', 'Уйти')
     markup.row('Тест', 'Другие кружки')
     if message.text == "esc":
-        pass
+        bot.send_message(message.chat.id, "Вы записаны!", reply_markup=markup)
     else:
         club_id = db.Club.get_id_from_name(message.text)
         if club_id is None:
@@ -357,17 +360,8 @@ def show_clubs_from_yandex(message, clubs, number_of_club):
         if message.text == 'Выйти в меню':
             bot.send_message(message.chat.id, "Вы перешли в меню", reply_markup=markup)
         elif message.text == "Далее >":
-            club_to_show_in_message = ""
-
-            prev_num = number_of_club
-            number_of_club = 0
-            for club in clubs:
-                number_of_club += 1
-                if number_of_club > prev_num:
-                    club_to_show_in_message += club
-                if number_of_club - prev_num == 5:
-                    break
-
+            club_to_show_in_message = "\n".join([club for club in clubs[number_of_club:number_of_club+5]])
+            number_of_club += 5
             markup = telebot.types.ReplyKeyboardMarkup()
             markup.add('Выйти в меню', "Далее >")
             msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
@@ -382,7 +376,6 @@ def form_query_from_tags(user_id):
         if tags[field] is None:
             tags[field] = 0
     best_tag = max(tags, key=tags.get)
-    print(best_tag)
     if best_tag == "science":
         return "Образовательный центр"
     elif best_tag == "art":
@@ -392,5 +385,5 @@ def form_query_from_tags(user_id):
 
 
 if __name__ == '__main__':
-    #db.create_db()
+    db.create_db()
     bot.polling(none_stop=True)
