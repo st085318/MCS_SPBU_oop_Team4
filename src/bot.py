@@ -5,7 +5,7 @@ import json
 import telebot
 
 # получаем учётные данные
-with open("credentials/credentials.json") as f:
+with open(r"../credentials/credentials.json") as f:
     credentials = json.load(f)[1]
 bot = telebot.TeleBot(credentials["telegram_bot_token"])
 apikey = credentials["yandex_key"]
@@ -31,20 +31,20 @@ def help_information(message):
         bot.send_message(message.chat.id, 'Отправьте: \n"Описание", чтобы изменить описание своего клуба\n'
                                           '"Участники", чтобы узнать список участников клуба')
     else:
-        bot.send_message(message.chat.id, 'Отправьте: \n'
-                                          '"Записаться", записаться на клуб\n'
-                                          '"Уйти", чтобы уйти из клуба')
+        bot.send_message(message.chat.id, 'Нажмите: \n'
+                                          '"Записаться", записаться на клуб-партнер\n'
+                                          '"Уйти", чтобы уйти из клуба-партнера\n'
+                                          '"Тест", чтобы пройти тест на определение предпочтений\n'
+                                          '"Другие кружки", чтобы увидеть подходящие кружки из Яндекса')
 
 
 # команды, совершаемые ботом
-@bot.message_handler(content_types=['text'])
 def bot_new_description(message):
     del_markup = telebot.types.ReplyKeyboardRemove()
     msg = bot.send_message(message.chat.id, "Введите новое описание", reply_markup=del_markup)
     bot.register_next_step_handler(msg, add_club_description)
 
 
-@bot.message_handler(content_types=['text'])
 def bot_clubs_and_info(message):
     clubs = db.Club.get_clubs_to_join()
     clubs_of_your_city = []
@@ -70,7 +70,6 @@ def bot_clubs_and_info(message):
         bot.send_message(message.chat.id, "У нас пока нет кружков в вашем городе(")
 
 
-@bot.message_handler(content_types=['text'])
 def bot_quit_from_club(message):
     del_markup = telebot.types.ReplyKeyboardRemove()
     msg = bot.send_message(message.chat.id, "Введите название клуба, который вы хотите покинуть",
@@ -78,7 +77,6 @@ def bot_quit_from_club(message):
     bot.register_next_step_handler(msg, quit_from_club)
 
 
-@bot.message_handler(content_types=['text'])
 def bot_start_test(message):
     markup = telebot.types.ReplyKeyboardMarkup()
     markup.row('Да', 'Нет')
@@ -90,25 +88,25 @@ def bot_start_test(message):
     bot.register_next_step_handler(msg, member_test)
 
 
-@bot.message_handler(content_types=['text'])
 def bot_show_other_clubs(message):
     tag_query = form_query_from_tags(message.from_user.id)
     clubs = find_clubs_in_yandex(apikey, db.Client.get_city(message.chat.id), tag_query)
     del_markup = telebot.types.ReplyKeyboardRemove()
     bot.send_message(message.chat.id, "А вот и они", reply_markup=del_markup)
     number_of_club = 0
+    page_size = 5
     club_to_show_in_message = ""
 
     for club in clubs:
         number_of_club += 1
         club_to_show_in_message += club
-        if number_of_club == 5:
+        if number_of_club == page_size:
             break
     if club_to_show_in_message:
         markup = telebot.types.ReplyKeyboardMarkup()
         markup.add('Выйти в меню', "Далее >")
         msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
-        bot.register_next_step_handler(msg, show_clubs_from_yandex)
+        bot.register_next_step_handler(msg, show_clubs_from_yandex, clubs, page_size)
     else:
         markup = telebot.types.ReplyKeyboardMarkup()
         markup.add('Записаться', 'Уйти')
@@ -138,7 +136,7 @@ def read_messages(message):
         elif message.text == "Уйти":
             bot_quit_from_club(message)
         elif message.text == "Тест":
-            bot_start_test
+            bot_start_test(message)
         elif message.text == "Другие кружки":
             bot_show_other_clubs(message)
         else:
@@ -182,8 +180,10 @@ def member_test(message, test_step=0):
             pass
         elif message.text == 'Нет':
             if test_step == 0:
-                del_markup = telebot.types.ReplyKeyboardRemove()
-                bot.send_message(message.chat.id, "Отмена теста.", reply_markup=del_markup)
+                markup = telebot.types.ReplyKeyboardMarkup()
+                markup.add('Записаться', 'Уйти')
+                markup.row('Тест', 'Другие кружки')
+                bot.send_message(message.chat.id, "Отмена теста.", reply_markup=markup)
                 return
             elif test_step == 1:
                 pass
@@ -255,7 +255,7 @@ def member_test(message, test_step=0):
 
 @bot.message_handler(content_types=['photo'])
 def react_photo(message):
-    bot.send_message(message.chat.id, "So beautiful!")
+    bot.send_message(message.chat.id, "Красиво, но я не знаю, что с этим делать ¯\\_(ツ)_/¯")
 
 
 def get_name_to_register(message):
@@ -301,7 +301,7 @@ def join_club(message):
     markup.add('Записаться', 'Уйти')
     markup.row('Тест', 'Другие кружки')
     if message.text == "esc":
-        pass
+        bot.send_message(message.chat.id, "Вы записаны!", reply_markup=markup)
     else:
         club_id = db.Club.get_id_from_name(message.text)
         if club_id is None:
@@ -389,17 +389,8 @@ def show_clubs_from_yandex(message, clubs, number_of_club):
         if message.text == 'Выйти в меню':
             bot.send_message(message.chat.id, "Вы перешли в меню", reply_markup=markup)
         elif message.text == "Далее >":
-            club_to_show_in_message = ""
-
-            prev_num = number_of_club
-            number_of_club = 0
-            for club in clubs:
-                number_of_club += 1
-                if number_of_club > prev_num:
-                    club_to_show_in_message += club
-                if number_of_club - prev_num == 5:
-                    break
-
+            club_to_show_in_message = "\n".join([club for club in clubs[number_of_club:number_of_club+5]])
+            number_of_club += 5
             markup = telebot.types.ReplyKeyboardMarkup()
             markup.add('Выйти в меню', "Далее >")
             msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
@@ -415,7 +406,6 @@ def form_query_from_tags(user_id):
         if tags[field] is None:
             tags[field] = 0
     best_tag = max(tags, key=tags.get)
-    print(best_tag)
     if best_tag == "science":
         return "Образовательный центр"
     elif best_tag == "art":
