@@ -4,7 +4,7 @@ import src.new_database as db
 import json
 import telebot
 
-with open(r"C:\Users\SoSirius\PycharmProjects\MCS_SPBU_oop_Team4\credentials\credentials.json") as f:
+with open(r"../credentials/credentials.json") as f:
     credentials = json.load(f)[1]
 bot = telebot.TeleBot(credentials["telegram_bot_token"])
 apikey = credentials["yandex_key"]
@@ -35,14 +35,12 @@ def help_information(message):
                                           '"Другие кружки", чтобы увидеть подходящие кружки из Яндекса')
 
 
-@bot.message_handler(content_types=['text'])
 def bot_new_description(message):
     del_markup = telebot.types.ReplyKeyboardRemove()
     msg = bot.send_message(message.chat.id, "Введите новое описание", reply_markup=del_markup)
     bot.register_next_step_handler(msg, add_club_description)
 
 
-@bot.message_handler(content_types=['text'])
 def bot_clubs_and_info(message):
     clubs = db.Club.get_clubs_to_join()
     clubs_of_your_city = []
@@ -68,7 +66,6 @@ def bot_clubs_and_info(message):
         bot.send_message(message.chat.id, "У нас пока нет кружков в вашем городе(")
 
 
-@bot.message_handler(content_types=['text'])
 def bot_quit_from_club(message):
     del_markup = telebot.types.ReplyKeyboardRemove()
     msg = bot.send_message(message.chat.id, "Введите название клуба, который вы хотите покинуть",
@@ -76,7 +73,6 @@ def bot_quit_from_club(message):
     bot.register_next_step_handler(msg, quit_from_club)
 
 
-@bot.message_handler(content_types=['text'])
 def bot_start_test(message):
     markup = telebot.types.ReplyKeyboardMarkup()
     markup.row('Да', 'Нет')
@@ -88,25 +84,25 @@ def bot_start_test(message):
     bot.register_next_step_handler(msg, member_test)
 
 
-@bot.message_handler(content_types=['text'])
 def bot_show_other_clubs(message):
     tag_query = form_query_from_tags(message.from_user.id)
     clubs = find_clubs_in_yandex(apikey, db.Client.get_city(message.chat.id), tag_query)
     del_markup = telebot.types.ReplyKeyboardRemove()
     bot.send_message(message.chat.id, "А вот и они", reply_markup=del_markup)
     number_of_club = 0
+    page_size = 5
     club_to_show_in_message = ""
 
     for club in clubs:
         number_of_club += 1
         club_to_show_in_message += club
-        if number_of_club == 5:
+        if number_of_club == page_size:
             break
     if club_to_show_in_message:
         markup = telebot.types.ReplyKeyboardMarkup()
         markup.add('Выйти в меню', "Далее >")
         msg = bot.send_message(message.chat.id, club_to_show_in_message, reply_markup=markup)
-        bot.register_next_step_handler(msg, show_clubs_from_yandex)
+        bot.register_next_step_handler(msg, show_clubs_from_yandex, clubs, page_size)
     else:
         markup = telebot.types.ReplyKeyboardMarkup()
         markup.add('Записаться', 'Уйти')
@@ -135,7 +131,7 @@ def read_messages(message):
         elif message.text == "Уйти":
             bot_quit_from_club(message)
         elif message.text == "Тест":
-            bot_start_test
+            bot_start_test(message)
         elif message.text == "Другие кружки":
             bot_show_other_clubs(message)
         else:
@@ -252,7 +248,7 @@ def member_test(message, test_step=0):
 
 @bot.message_handler(content_types=['photo'])
 def react_photo(message):
-    bot.send_message(message.chat.id, "So beautiful!")
+    bot.send_message(message.chat.id, "Красиво, но я не знаю, что с этим делать ¯\\_(ツ)_/¯")
 
 
 def get_name_to_register(message):
