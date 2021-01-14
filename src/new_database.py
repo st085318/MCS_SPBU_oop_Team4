@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 from sqlalchemy import Column, Integer, String, create_engine, BOOLEAN
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -8,13 +7,13 @@ engine = create_engine('sqlite:///test.db', echo=False)
 
 Base = declarative_base()
 
-# пользователь может быть клиентом или руководителем клуба
+# Пользователь может быть клиентом или руководителем клуба
 TypeOfUser = namedtuple('TypeOfUser', ['is_client', 'is_club', 'is_unknown'])
 
 ClubInformation = namedtuple('ClubInformation', ['name', 'description', 'city'])
 
 
-# класс с таблицей и методами клиентов
+# Класс с таблицей и методами клиентов
 class Client(Base):
     __tablename__ = 'clients'
     telegram_id = Column(Integer, primary_key=True, nullable=False)
@@ -62,7 +61,7 @@ class Client(Base):
         session.commit()
 
 
-# класс с таблицей и методами клубов
+# Класс с таблицей и методами клубов
 class Club(Base):
     __tablename__ = 'clubs'
     telegram_id = Column(Integer, primary_key=True, nullable=False)
@@ -125,7 +124,7 @@ class Club(Base):
         session.commit()
 
 
-# класс, помогающий отслеживать вступление и выход из клубов
+# Класс, помогающий отслеживать вступление и выход из клубов
 class Membership(Base):
     __tablename__ = "membership"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -197,10 +196,11 @@ class Membership(Base):
         return clubs_telegram_id
 
 
-# класс, отвечающий за теги пользователей и клубов
+# Класс, отвечающий за теги пользователей и клубов
 class Tag(Base):
     __tablename__ = 'tags'
     telegram_id = Column(Integer, primary_key=True, nullable=False)
+    # Тэги - особые значения, отвечающие за направленность клуба
     science_tag = Column(Integer, nullable=False)
     sport_tag = Column(Integer, nullable=False)
     art_tag = Column(Integer, nullable=False)
@@ -215,7 +215,7 @@ class Tag(Base):
     def set_tags(telegram_id: int, sport: int, science: int, art: int):
         Session = sessionmaker(bind=engine)
         session = Session()
-        user = session.query(Tag).filter(Tag.telegram_id == telegram_id).first()
+        user = session.query(Tag).get(telegram_id)
         if user is None:
             user = Tag(telegram_id, sport, science, art)
         else:
@@ -229,7 +229,7 @@ class Tag(Base):
     def add_tags(telegram_id: int, sport_add_value: int, science_add_value: int, art_add_value: int):
         Session = sessionmaker(bind=engine)
         session = Session()
-        user = session.query(Tag).filter(Tag.telegram_id == telegram_id).first()
+        user = session.query(Tag).get(telegram_id)
         Tag.set_tags(telegram_id, user.sport_tag + sport_add_value, user.science_tag + science_add_value,
                      user.art_tag + art_add_value)
 
@@ -237,7 +237,7 @@ class Tag(Base):
     def get_tags(telegram_id: int) -> dict:
         Session = sessionmaker(bind=engine)
         session = Session()
-        user = session.query(Tag).filter(Tag.telegram_id == telegram_id).first()
+        user = session.query(Tag).get(telegram_id)
         if user is None:
             user = Tag(telegram_id, 0, 0, 0)
         return {"art": user.art_tag, "sport": user.sport_tag, "science": user.science_tag}
