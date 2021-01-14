@@ -3,11 +3,13 @@ import json
 
 
 def find_clubs_in_yandex(apikey: str, city="Москва", search_query="Секции") -> [str]:
-    url = f"https://search-maps.yandex.ru/v1/?text={search_query},{city}&type=biz&lang=ru_RU&results=50&apikey={apikey}"
+    url = f"https://search-maps.yandex.ru/v1/?text={search_query}," \
+          f"{city}&type=biz&lang=ru_RU&results=50&apikey={apikey}"
     yandex_ans = requests.get(url)
     companies_with_info = []
     if str(yandex_ans) == "<Response [200]>":
-        yandex_ans = json.loads(yandex_ans.text)
+        # Запрошенный ресурс был найден
+        yandex_ans = yandex_ans.json()
         companies = yandex_ans.get("features")
         for company in companies:
             companies_info = ""
