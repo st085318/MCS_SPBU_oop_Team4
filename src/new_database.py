@@ -1,9 +1,9 @@
-from sqlalchemy import Column, Integer, String, create_engine, BOOLEAN
+from sqlalchemy import Column, Integer, String, create_engine, BOOLEAN, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from collections import namedtuple
 
-engine = create_engine('sqlite:///test.db', echo=False)
+engine = create_engine('sqlite:///clients.db', echo=False)
 
 Base = declarative_base()
 
@@ -19,6 +19,8 @@ class Client(Base):
     telegram_id = Column(Integer, primary_key=True, nullable=False)
     client_name = Column(String, nullable=False)
     city = Column(String, nullable=False)
+    location_latitude = Column(Float)
+    location_longitude = Column(Float)
 
     def __init__(self, telegram_id: int, name: str, city: str):
         self.telegram_id = telegram_id
@@ -38,6 +40,7 @@ class Client(Base):
         Session = sessionmaker(bind=engine)
         session = Session()
         client = session.query(Client).filter_by(telegram_id=telegram_id).first()
+        session.commit()
         return client.city
 
     @staticmethod
@@ -45,7 +48,26 @@ class Client(Base):
         Session = sessionmaker(bind=engine)
         session = Session()
         client = session.query(Client).filter_by(telegram_id=telegram_id).first()
+        session.commit()
         return client.client_name
+
+    @staticmethod
+    def get_location(tg_id: int) -> {}:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        client = session.query(Client).filter_by(telegram_id=tg_id).first()
+        session.commit()
+        return {'latitude': client.location_latitude, 'longitude': client.location_longitude}
+
+    '''
+    @staticmethod
+    def get_talent(telegram_id: int) -> {}:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        client = session.query(Client).filter_by(telegram_id=telegram_id).first()
+        return {'tech': client.talent_tech, 'art': client.talent_art, "humanitarian": client.talent_humanitarian,
+                "physical": client.talent_physical}
+    '''
 
     @staticmethod
     def update_field(telegram_id: int, field_name: str, field_value: str):
@@ -54,9 +76,13 @@ class Client(Base):
         client = session.query(Client).\
             filter(Client.telegram_id == telegram_id).first()
         if field_name == "client_name":
-            client.name = field_value
+            client.client_name = field_value
         elif field_name == "city":
             client.city = field_value
+        elif field_name == "longitude":
+            client.location_longitude = float(field_value)
+        elif field_name == "latitude":
+            client.location_latitude = float(field_value)
         session.add(client)
         session.commit()
 
@@ -201,46 +227,67 @@ class Tag(Base):
     __tablename__ = 'tags'
     telegram_id = Column(Integer, primary_key=True, nullable=False)
     # Тэги - особые значения, отвечающие за направленность клуба
-    science_tag = Column(Integer, nullable=False)
-    sport_tag = Column(Integer, nullable=False)
-    art_tag = Column(Integer, nullable=False)
+    tag_tech = Column(Integer, nullable=False)
+    tag_humanitarian = Column(Integer, nullable=False)
+    tag_art = Column(Integer, nullable=False)
+    tag_sport = Column(Integer, nullable=False)
+    tag_creative = Column(Integer, nullable=False)
+    tag_artistic = Column(Integer, nullable=False)
+    tag_literature = Column(Integer, nullable=False)
 
-    def __init__(self, telegram_id: int, art: int, science: int, sport: int):
+    def __init__(self, telegram_id: int, art: int, tech: int, sport: int, creative: int, artistic: int,
+                 literature: int, humanitarian: int):
         self.telegram_id = telegram_id
-        self.art_tag = art
-        self.science_tag = science
-        self.sport_tag = sport
+        self.tag_art = art
+        self.tag_tech = tech
+        self.tag_sport = sport
+        self.tag_creative = creative
+        self.tag_artistic = artistic
+        self.tag_literature = literature
+        self.tag_humanitarian = humanitarian
 
     @staticmethod
-    def set_tags(telegram_id: int, sport: int, science: int, art: int):
+    def set_tags(telegram_id: int, art: int, tech: int, sport: int, creative: int, artistic: int,
+                 literature: int, humanitarian: int):
         Session = sessionmaker(bind=engine)
         session = Session()
         user = session.query(Tag).get(telegram_id)
         if user is None:
-            user = Tag(telegram_id, sport, science, art)
+            user = Tag(telegram_id, art, tech, sport, creative, artistic, literature, humanitarian)
         else:
-            user.sport_tag = sport
-            user.science_tag = science
-            user.art_tag = art
+            user.tag_sport = sport
+            user.tag_art = art
+            user.tag_tech = tech
+            user.tag_creative = creative
+            user.tag_artistic = artistic
+            user.tag_literature = literature
+            user.humanitarian = humanitarian
         session.add(user)
         session.commit()
 
     @staticmethod
-    def add_tags(telegram_id: int, sport_add_value: int, science_add_value: int, art_add_value: int):
+    def add_tags(telegram_id: int, art_add_value: int, tech_add_value: int, sport_add_value: int,
+                 creative_add_value: int,  artistic_add_value: int, literature_add_value: int,
+                 humanitarian_add_value: int):
         Session = sessionmaker(bind=engine)
         session = Session()
         user = session.query(Tag).get(telegram_id)
-        Tag.set_tags(telegram_id, user.sport_tag + sport_add_value, user.science_tag + science_add_value,
-                     user.art_tag + art_add_value)
+        Tag.set_tags(telegram_id, user.tag_art + art_add_value, user.tag_tech + tech_add_value,
+                     user.tag_sport + sport_add_value, user.tag_creative + creative_add_value,
+                     user.tag_artistic + artistic_add_value, user.tag_literature + literature_add_value,
+                     user.tag_humanitarian + humanitarian_add_value)
+        session.commit()
 
     @staticmethod
-    def get_tags(telegram_id: int) -> dict:
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        user = session.query(Tag).get(telegram_id)
+    def get_tags(telegram_id: int):
+        tag_Session = sessionmaker(bind=engine)
+        tag_session = tag_Session()
+        user = tag_session.query(Tag).filter_by(telegram_id=telegram_id).first()
         if user is None:
-            user = Tag(telegram_id, 0, 0, 0)
-        return {"art": user.art_tag, "sport": user.sport_tag, "science": user.science_tag}
+            return {"art": 0, "sport": 0, "tech": 0, "creative": 0, "artistic": 0, "literature": 0,
+                    "humanitarian": 0}
+        return {"art": user.tag_art, "sport": user.tag_sport, "tech": user.tag_tech, "creative": user.tag_creative,
+                "artistic": user.tag_artistic, "literature": user.tag_literature, "humanitarian": user.tag_humanitarian}
 
 
 def is_user_client_or_club(tg_id: int) -> TypeOfUser:
